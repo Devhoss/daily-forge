@@ -1,5 +1,6 @@
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
@@ -18,6 +19,8 @@ interface SettingsContextValue {
   reminderTime: string;
   setNotificationsEnabled: (value: boolean) => Promise<void>;
   setReminderTime: (value: string) => Promise<void>;
+  navRefreshKey: number;
+  refreshNav: () => void;
 }
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
@@ -26,6 +29,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
   const [reminderTime, setReminderTimeState] = useState("18:00");
+  const [navRefreshKey, setNavRefreshKey] = useState(0);
+
+  const refreshNav = useCallback(() => setNavRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
     (async () => {
@@ -57,6 +63,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         reminderTime,
         setNotificationsEnabled,
         setReminderTime,
+        navRefreshKey,
+        refreshNav,
       }}
     >
       {children}

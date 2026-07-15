@@ -196,3 +196,18 @@ export async function getWeeksWithAnyPhoto(): Promise<number[]> {
   const all = await db.photos.toArray();
   return [...new Set(all.map((p) => p.week))].sort((a, b) => a - b);
 }
+
+export async function resetProgress(): Promise<void> {
+  await db.sessionLogs.clear();
+  await db.setLogs.clear();
+  await db.measurements.clear();
+  await db.photos.clear();
+}
+
+export async function resetAllData(): Promise<void> {
+  await db.settings.clear();
+  await db.sessionLogs.clear();
+  await db.setLogs.clear();
+  await db.measurements.clear();
+  await db.photos.clear();
+}

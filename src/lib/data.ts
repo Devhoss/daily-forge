@@ -46,3 +46,24 @@ export function resolveIllustrationSrc(ex: Exercise): string | null {
   if (!ex.illustration.image) return null;
   return `/illustrations/${ex.illustration.image}`;
 }
+
+const PORTRAIT_EXERCISE_IDS = new Set([
+  'standing-shoulder-press',
+  'front-raise',
+  'lateral-raise',
+  'hammer-curl',
+  'biceps-curl',
+  'shrugs',
+]);
+
+export function isPortraitExercise(ex: Exercise): boolean {
+  return PORTRAIT_EXERCISE_IDS.has(ex.id);
+}
+
+export const TRAINING_SESSIONS_PER_WEEK = program.weekly_template.filter(
+  (d) => d.session_key !== 'rest',
+).length;
+
+export function getTotalWorkouts(): number {
+  return TRAINING_SESSIONS_PER_WEEK * program.week_table.length;
+}

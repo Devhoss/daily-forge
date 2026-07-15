@@ -20,12 +20,17 @@ export function getNextWorkoutLabel(dayIndex: number): string {
   return "";
 }
 
+function parseLocalDate(iso: string): Date {
+  const [y, m, d] = iso.split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
 function toMidnight(d: Date): number {
   return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 }
 
 export function daysBetween(startIso: string, today: Date): number {
-  const start = toMidnight(new Date(startIso));
+  const start = parseLocalDate(startIso).getTime();
   const now = toMidnight(today);
   return Math.floor((now - start) / 86_400_000);
 }

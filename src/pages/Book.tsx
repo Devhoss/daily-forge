@@ -8,7 +8,7 @@ const FEATURES = [
   "Complete 12-week program",
   "Nutrition Guide",
   "Recovery Guide",
-  "Exercise Library",
+  "Exercises",
   "Progress Tracking",
 ];
 

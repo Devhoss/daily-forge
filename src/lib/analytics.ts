@@ -90,12 +90,9 @@ export function computeOverallStats(
   };
 }
 
-export function computeProgramCompletionPct(daysSinceStart: number): number {
-  const totalDays = program.week_table.length * program.weekly_template.length;
-  return Math.min(
-    100,
-    Math.max(0, Math.round((daysSinceStart / totalDays) * 100)),
-  );
+export function computeProgramCompletionPct(completedWorkouts: number): number {
+  const totalWorkouts = TRAINING_SESSIONS_PER_WEEK * program.week_table.length;
+  return Math.min(100, Math.max(0, Math.round((completedWorkouts / totalWorkouts) * 100)));
 }
 
 function average(values: number[]): number | null {

@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Play } from "lucide-react";
-import { getExercise, resolveIllustrationSrc } from "@/lib/data";
+import { getExercise, resolveIllustrationSrc, isPortraitExercise } from "@/lib/data";
 import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { DifficultyDots } from "@/components/ui/DifficultyDots";
+import { cn } from "@/lib/utils";
 
 export function ExerciseDetail() {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +23,7 @@ export function ExerciseDetail() {
   }
 
   const img = resolveIllustrationSrc(ex);
+  const portrait = isPortraitExercise(ex);
 
   return (
     <div className="safe-top min-h-screen pb-28">
@@ -58,14 +60,15 @@ export function ExerciseDetail() {
           ))}
         </div>
 
-        <div className="mt-4 aspect-[4/5] overflow-hidden rounded-2xl bg-gradient-to-br from-[#101B34] to-[#16213E]">
-          {img ? (
-            <img
-              src={img}
-              alt={ex.illustration.alt}
-              className="h-full w-full object-contain"
-            />
+        <div className={cn("mt-4 overflow-hidden rounded-2xl", portrait ? "relative aspect-[4/5] bg-[#0d1528]" : "aspect-[4/5] bg-gradient-to-br from-[#101B34] to-[#16213E]")}>
+          {img ? (portrait ? (
+            <>
+              <img src={img} alt="" className="absolute inset-0 h-full w-full scale-[2] object-cover blur-3xl opacity-30" />
+              <img src={img} alt={ex.illustration.alt} className="relative h-full w-full object-contain" />
+            </>
           ) : (
+            <img src={img} alt={ex.illustration.alt} className="h-full w-full object-contain" />
+          )) : (
             <div className="flex h-full items-center justify-center p-6 text-center text-xs text-slate-500">
               Illustration coming soon
             </div>
@@ -76,7 +79,7 @@ export function ExerciseDetail() {
           href={ex.video.url}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3 font-semibold text-white"
+          className="mt-3 flex items-center justify-center gap-2 rounded-xl bg-blue-600 py-3.5 font-semibold text-white transition active:scale-[0.97]"
         >
           <Play size={16} fill="currentColor" /> Watch Demo
         </a>

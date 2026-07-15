@@ -1,14 +1,17 @@
+import type { LocalNotificationSchema } from '@capacitor/local-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { getTodayInfo } from '@/lib/programEngine';
 import { program } from '@/lib/data';
 
 const ROLLING_WINDOW_DAYS = 55; // stays safely under iOS's 64-pending-notification cap
 const CHANNEL_ID = 'training-reminders';
+const SMALL_ICON = 'ic_notification';
+const ICON_COLOR = '#3B82F6'; // blue-500
 
 function sessionReminderBody(sessionKey: string): string {
   const session = program.sessions[sessionKey];
   const title = session?.title.split('—')[0].trim() ?? 'Training';
-  return `${title} today. Time to train.`;
+  return `Today's workout: ${title}. Time to train.`;
 }
 
 /** Android 8+ (API 26+) requires every notification to belong to a channel,
@@ -68,6 +71,8 @@ export async function scheduleTestNotification(): Promise<void> {
     body: `Scheduled at ${new Date().toLocaleTimeString()}, should fire at ${at.toLocaleTimeString()}`,
     schedule: { at },
     channelId: CHANNEL_ID,
+    smallIcon: SMALL_ICON,
+    iconColor: ICON_COLOR,
   };
   console.log('[notifications] TEST: scheduling', JSON.stringify(testNotification));
 
@@ -114,13 +119,7 @@ export async function refreshDailyReminders(
       await LocalNotifications.cancel({ notifications: pendingBefore.notifications });
     }
 
-    const notifications: {
-      id: number;
-      title: string;
-      body: string;
-      schedule: { at: Date };
-      channelId: string;
-    }[] = [];
+    const notifications: LocalNotificationSchema[] = [];
     const today = new Date();
 
     for (let i = 0; i < ROLLING_WINDOW_DAYS; i++) {
@@ -134,10 +133,12 @@ export async function refreshDailyReminders(
 
       notifications.push({
         id: i + 1,
-        title: 'The Home Dumbbell Blueprint',
+        title: 'DailyForge',
         body: sessionReminderBody(info.weeklyTemplateEntry.session_key),
         schedule: { at: date },
         channelId: CHANNEL_ID,
+        smallIcon: SMALL_ICON,
+        iconColor: ICON_COLOR,
       });
     }
 
