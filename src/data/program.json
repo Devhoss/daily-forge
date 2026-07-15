@@ -1,0 +1,117 @@
+{
+  "progress_checkpoints": [1, 4, 8, 12],
+  "principle_statement": "Every set in this program is built around one constraint: the load never changes. Two 5kg dumbbells are the only external resistance available for all 12 weeks. Instead of adding weight, this program adds difficulty through five other levers: tempo (slower lowering phases and paused reps), density (less rest between sets), range of motion (deeper stretches, fuller contractions), unilateral loading (one limb at a time roughly doubles the relative load), and mechanical drop sets (switching to a weaker exercise variation the instant the primary one is fatigued). These five levers are what create progressive overload in this program.",
+  "phases": [
+    {
+      "phase_number": 1,
+      "name": "Foundation",
+      "weeks": "1-3",
+      "goal": "Own the movement patterns. Every rep should be a rep you could show a coach without correction.",
+      "sets": "3 per exercise",
+      "reps": "12-15",
+      "tempo": "2-0-2-0 (moderate, controlled, no pauses yet)",
+      "rest": "75-90 seconds",
+      "technique_focus": "Full range of motion on every rep. No mechanical drop sets yet. Learn the hip hinge, the squat pattern, and scapular control on rows before adding any intensity techniques."
+    },
+    {
+      "phase_number": 2,
+      "name": "Tempo & Density",
+      "weeks": "5-7",
+      "goal": "Make the same 5kg feel heavier by slowing down and resting less.",
+      "sets": "3-4 per exercise",
+      "reps": "15-20",
+      "tempo": "3-1-1-0 (3-second lowering phase, 1-second pause at the hardest point)",
+      "rest": "60-75 seconds",
+      "technique_focus": "Introduce single-arm and single-leg variations where listed (Single-Arm Row, Single-Leg Romanian Deadlift progression work). Begin using top-of-rep pauses on shoulder and back exercises."
+    },
+    {
+      "phase_number": 3,
+      "name": "Advanced Overload",
+      "weeks": "9-11",
+      "goal": "Push each set close to genuine muscular fatigue using every available tool.",
+      "sets": "4 per exercise",
+      "reps": "20-25, or mechanical drop sets to failure",
+      "tempo": "3-2-1-0 (long eccentric, long pause, explosive-controlled concentric)",
+      "rest": "45-60 seconds (density phase — the clock is part of the overload)",
+      "technique_focus": "Full use of mechanical drop sets (e.g., Biceps Curl into Hammer Curl), unilateral primary lifts (Bulgarian Split Squat, Single-Arm Row as first-choice variations), and paused reps on every set."
+    },
+    {
+      "phase_number": 4,
+      "name": "Capstone & Test",
+      "weeks": "12",
+      "goal": "Measure exactly how far you have come and reset your baseline for the next 12-week cycle.",
+      "sets": "As programmed in the Week 12 test session",
+      "reps": "Maximum strict, controlled reps on benchmark exercises",
+      "tempo": "Standard controlled tempo, no forced slow-down — this week measures capacity, not time under tension",
+      "rest": "Full recovery between test attempts (2-3 minutes)",
+      "technique_focus": "Retest the four benchmark exercises from Week 1, retake measurements and photos, and log the results in the Progress Tracker before beginning a new cycle."
+    }
+  ],
+  "deload_weeks": [4, 8],
+  "deload_protocol": {
+    "sets": "2 per exercise (roughly 40% less volume than the surrounding weeks)",
+    "reps": "8-10, well short of failure",
+    "tempo": "Normal, unhurried — no forced pauses",
+    "rest": "120 seconds, unhurried",
+    "note": "A deload is not a rest day. You still train, but you leave every set feeling like you had 5+ reps left in the tank. This is what allows the joints and nervous system to catch up before the next phase increases difficulty again."
+  },
+  "benchmark_tests": [
+    {"exercise": "Push-up", "test": "Maximum strict, full-range reps in one set"},
+    {"exercise": "Goblet Squat", "test": "Maximum controlled reps at a 3-1-1-0 tempo before form breaks down"},
+    {"exercise": "Plank", "test": "Maximum hold time with a perfectly straight line"},
+    {"exercise": "Standing Shoulder Press", "test": "Maximum strict reps with both 5kg dumbbells"}
+  ],
+  "weekly_template": [
+    {"day": "Day 1", "label": "Push A", "session_key": "push_a"},
+    {"day": "Day 2", "label": "Pull A", "session_key": "pull_a"},
+    {"day": "Day 3", "label": "Legs A", "session_key": "legs_a"},
+    {"day": "Day 4", "label": "Rest / Mobility", "session_key": "rest"},
+    {"day": "Day 5", "label": "Push B", "session_key": "push_b"},
+    {"day": "Day 6", "label": "Pull B", "session_key": "pull_b"},
+    {"day": "Day 7", "label": "Legs B + Core", "session_key": "legs_b"}
+  ],
+  "sessions": {
+    "push_a": {
+      "title": "Push A — Chest & Triceps Emphasis",
+      "exercises": ["dumbbell-floor-press", "push-up", "standing-shoulder-press", "lateral-raise", "overhead-triceps-extension", "front-raise"]
+    },
+    "push_b": {
+      "title": "Push B — Shoulders & Volume Emphasis",
+      "exercises": ["feet-elevated-push-up", "arnold-press", "diamond-push-up", "lateral-raise", "floor-chest-fly", "overhead-triceps-extension"]
+    },
+    "pull_a": {
+      "title": "Pull A — Back Thickness Emphasis",
+      "exercises": ["bent-over-row", "single-arm-row", "reverse-fly", "biceps-curl", "hammer-curl", "shrugs"]
+    },
+    "pull_b": {
+      "title": "Pull B — Back Width & Posture Emphasis",
+      "exercises": ["single-arm-row", "bent-over-row", "superman", "reverse-fly", "hammer-curl", "biceps-curl"]
+    },
+    "legs_a": {
+      "title": "Legs A — Quad Emphasis",
+      "exercises": ["goblet-squat", "split-squat", "standing-calf-raise", "wall-sit", "plank"]
+    },
+    "legs_b": {
+      "title": "Legs B + Core — Posterior Chain Emphasis",
+      "exercises": ["romanian-deadlift", "reverse-lunge", "standing-calf-raise", "russian-twist", "leg-raise", "mountain-climbers"]
+    },
+    "rest": {
+      "title": "Rest / Active Recovery",
+      "exercises": []
+    }
+  },
+  "week_table": [
+    {"week": 1, "phase": "Foundation", "focus": "Learn every pattern", "sets": "3", "reps": "12-15", "tempo": "2-0-2-0", "rest": "75-90s", "deload": false},
+    {"week": 2, "phase": "Foundation", "focus": "Groove the patterns", "sets": "3", "reps": "12-15", "tempo": "2-0-2-0", "rest": "75-90s", "deload": false},
+    {"week": 3, "phase": "Foundation", "focus": "Add 1-2 reps per set vs. Week 1", "sets": "3", "reps": "13-16", "tempo": "2-0-2-0", "rest": "75s", "deload": false},
+    {"week": 4, "phase": "Deload", "focus": "Recover before Phase 2", "sets": "2", "reps": "8-10", "tempo": "Normal", "rest": "120s", "deload": true},
+    {"week": 5, "phase": "Tempo & Density", "focus": "Introduce the paused eccentric", "sets": "3-4", "reps": "15-18", "tempo": "3-1-1-0", "rest": "60-75s", "deload": false},
+    {"week": 6, "phase": "Tempo & Density", "focus": "Introduce single-limb variations", "sets": "3-4", "reps": "15-18", "tempo": "3-1-1-0", "rest": "60-75s", "deload": false},
+    {"week": 7, "phase": "Tempo & Density", "focus": "Push density — shave 10-15s off rest", "sets": "4", "reps": "18-20", "tempo": "3-1-1-0", "rest": "50-60s", "deload": false},
+    {"week": 8, "phase": "Deload", "focus": "Recover before Phase 3", "sets": "2", "reps": "8-10", "tempo": "Normal", "rest": "120s", "deload": true},
+    {"week": 9, "phase": "Advanced Overload", "focus": "Full unilateral variations become default", "sets": "4", "reps": "20-22", "tempo": "3-2-1-0", "rest": "45-60s", "deload": false},
+    {"week": 10, "phase": "Advanced Overload", "focus": "Introduce mechanical drop sets on arms", "sets": "4", "reps": "20-25", "tempo": "3-2-1-0", "rest": "45-60s", "deload": false},
+    {"week": 11, "phase": "Advanced Overload", "focus": "Peak volume week", "sets": "4", "reps": "22-25", "tempo": "3-2-1-0", "rest": "45s", "deload": false},
+    {"week": 12, "phase": "Capstone & Test", "focus": "Retest all four benchmarks, remeasure, rephoto", "sets": "Test protocol", "reps": "Max controlled", "tempo": "Standard", "rest": "Full (2-3min)", "deload": false}
+  ]
+}
