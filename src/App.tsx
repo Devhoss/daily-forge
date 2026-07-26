@@ -7,6 +7,7 @@ import { WorkoutMode } from "@/pages/WorkoutMode";
 import { Book } from "@/pages/Book";
 import { Settings } from "@/pages/Settings";
 import { WorkoutReview } from "@/pages/WorkoutReview";
+import { History } from "@/pages/History";
 import { BottomNav } from "@/components/BottomNav";
 import { SettingsProvider, useSettings } from "@/lib/SettingsContext";
 import { getProgramStartDate } from "@/lib/db";
@@ -36,7 +37,7 @@ function Shell() {
   }, [loaded, notificationsEnabled, reminderTime]);
 
   const isOnboarding = location.pathname === "/" && hasStartDate === false;
-  const hideNav = location.pathname.startsWith("/workout") || isOnboarding;
+  const hideNav = location.pathname.startsWith("/workout") || location.pathname.startsWith("/review") || isOnboarding;
 
   return (
     <>
@@ -54,6 +55,7 @@ function Shell() {
             </Suspense>
           }
         />
+        <Route path="/history" element={<History />} />
         <Route path="/book" element={<Book />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>

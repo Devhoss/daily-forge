@@ -60,6 +60,22 @@ export function isPortraitExercise(ex: Exercise): boolean {
   return PORTRAIT_EXERCISE_IDS.has(ex.id);
 }
 
+export function isTimeBasedExercise(
+  ex: { tempo: string; reps: string },
+): boolean {
+  const t = ex.tempo.toLowerCase();
+  const r = ex.reps.toLowerCase();
+  return t.includes('isometric') || t.includes('hold') || r.includes('second');
+}
+
+export function parseHoldDuration(repsField: string): number {
+  const numbers = repsField.match(/(\d+)/g);
+  if (!numbers) return 30;
+  const first = parseInt(numbers[0], 10);
+  const last = parseInt(numbers[numbers.length - 1], 10);
+  return Math.round((first + last) / 2);
+}
+
 export const TRAINING_SESSIONS_PER_WEEK = program.weekly_template.filter(
   (d) => d.session_key !== 'rest',
 ).length;

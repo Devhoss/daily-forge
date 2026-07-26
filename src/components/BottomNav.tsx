@@ -1,12 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Dumbbell, BookOpen, LineChart, Settings } from 'lucide-react';
+import { Home, Dumbbell, Clock, LineChart, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const tabs = [
   { to: '/', label: 'Home', icon: Home },
   { to: '/library', label: 'Exercises', icon: Dumbbell },
+  { to: '/history', label: 'History', icon: Clock },
   { to: '/progress', label: 'Progress', icon: LineChart },
-  { to: '/book', label: 'Book', icon: BookOpen },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 

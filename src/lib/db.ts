@@ -27,6 +27,7 @@ export interface SetLog {
   exerciseId: string;
   setIndex: number;
   repsCompleted?: number;
+  holdDurationSeconds?: number;
   completedAt: string;
 }
 

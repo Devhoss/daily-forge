@@ -30,7 +30,7 @@
     "mistakes": [
       "Letting the hips sag toward the floor, which puts the lower back under load it isn't built for.",
       "Flaring the elbows out to 90 degrees, which stresses the front of the shoulder unnecessarily.",
-      "Only lowering halfway \u2014 partial range of motion trains partial strength."
+      "Only lowering halfway — partial range of motion trains partial strength."
     ],
     "pro_tips": [
       "Because you cannot add weight, add time under tension instead: a 3-second lowering phase on every rep turns 12 reps into a completely different stimulus than 12 fast reps.",
@@ -56,7 +56,7 @@
       "url": "https://homedumbbellblueprint.com/videos/push-up-form",
       "qr": null
     },
-    "tempo_note": "Once bodyweight reps exceed 15 \u2014 3s down, 1s pause at the bottom, 1s up, no pause at top.",
+    "tempo_note": "Once bodyweight reps exceed 15 — 3s down, 1s pause at the bottom, 1s up, no pause at top.",
     "reps_note": "Fixed load, so reps and tempo drive progression once 20 clean reps are reached."
   },
   {
@@ -88,7 +88,7 @@
     "rest": "75-90 seconds",
     "mistakes": [
       "Letting the elbows flare outward, which turns this back into a standard push-up and removes the triceps emphasis.",
-      "Shortening the range of motion because the exercise is harder \u2014 chest should still reach the hands."
+      "Shortening the range of motion because the exercise is harder — chest should still reach the hands."
     ],
     "pro_tips": [
       "This is your triceps overload exercise in a program with no isolated triceps machine. Treat the tuck of the elbow as the single most important technical cue.",
@@ -133,7 +133,7 @@
     ],
     "setup": "Place your feet on a stable, non-rolling surface 20-40cm high (a sturdy chair seat or bottom stair step). Hands on the floor as in a standard push-up. This is your bench-press-angle substitute since no incline bench exists.",
     "execution": [
-      "Keep the body in one straight line from ankles to head \u2014 do not let the hips pike upward.",
+      "Keep the body in one straight line from ankles to head — do not let the hips pike upward.",
       "Lower under control until the chest approaches the floor.",
       "Press back to full elbow extension, keeping the shoulder blades stable against the ribcage."
     ],
@@ -143,11 +143,11 @@
     "reps": "6-15",
     "rest": "75-90 seconds",
     "mistakes": [
-      "Using an unstable surface \u2014 a rolling chair or wobbly stool turns this into a balance drill instead of a chest exercise.",
+      "Using an unstable surface — a rolling chair or wobbly stool turns this into a balance drill instead of a chest exercise.",
       "Letting the hips rise to make the rep easier."
     ],
     "pro_tips": [
-      "This is the direct substitute for an incline bench press and specifically biases the upper chest and front delts \u2014 include it every Push day for balanced chest development.",
+      "This is the direct substitute for an incline bench press and specifically biases the upper chest and front delts — include it every Push day for balanced chest development.",
       "Elevate the feet higher over the weeks as reps become easy; height is your added-resistance dial when the dumbbells can't get heavier."
     ],
     "progressions": [
@@ -188,7 +188,7 @@
     "setup": "Lie on your back on the floor with knees bent, feet flat. Hold a dumbbell in each hand at chest level, elbows resting on the floor, palms facing your feet.",
     "execution": [
       "Press both dumbbells straight up over your chest until your arms are fully extended, without locking out aggressively.",
-      "Lower with control until your triceps lightly touch the floor \u2014 the floor is your depth limiter, replacing a bench.",
+      "Lower with control until your triceps lightly touch the floor — the floor is your depth limiter, replacing a bench.",
       "Pause briefly on the floor to remove momentum, then press again."
     ],
     "breathing": "Inhale as the dumbbells lower to the floor, exhale forcefully on the press.",
@@ -198,11 +198,11 @@
     "rest": "60-90 seconds",
     "mistakes": [
       "Bouncing the elbows off the floor to use momentum instead of pausing.",
-      "Flaring the elbows to 90 degrees, which stresses the shoulder \u2014 keep them closer to a 45-60 degree angle from the torso.",
+      "Flaring the elbows to 90 degrees, which stresses the shoulder — keep them closer to a 45-60 degree angle from the torso.",
       "Arching the lower back off the floor to press more weight."
     ],
     "pro_tips": [
-      "The floor press is a deliberately safer alternative to a bench press for a home setup with no spotter and no bench \u2014 the floor stops the descent so a stuck rep is never dangerous.",
+      "The floor press is a deliberately safer alternative to a bench press for a home setup with no spotter and no bench — the floor stops the descent so a stuck rep is never dangerous.",
       "Once 20 controlled reps with a floor pause feels easy, switch to a single-arm floor press (other hand braced on the floor) to increase the challenge without adding weight."
     ],
     "progressions": [
@@ -223,7 +223,24 @@
       "url": "https://homedumbbellblueprint.com/videos/dumbbell-floor-press-form",
       "qr": null
     },
-    "tempo_note": "The 2-second floor pause is mandatory \u2014 it is your substitute for adding weight."
+    "tempo_note": "The 2-second floor pause is mandatory — it is your substitute for adding weight.",
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      },
+      "15": {
+        "repRange": "6-8"
+      }
+    }
   },
   {
     "id": "floor-chest-fly",
@@ -244,7 +261,7 @@
     "setup": "Lie on your back, knees bent, feet flat. Hold a dumbbell in each hand directly above your chest with a slight bend in the elbows, palms facing each other.",
     "execution": [
       "Lower the dumbbells out to the sides in a wide arc, keeping the slight elbow bend fixed throughout.",
-      "Stop the descent the moment your upper arms touch the floor \u2014 the floor protects the shoulder from overstretching, since there is no bench to allow a deeper, riskier stretch.",
+      "Stop the descent the moment your upper arms touch the floor — the floor protects the shoulder from overstretching, since there is no bench to allow a deeper, riskier stretch.",
       "Reverse the arc, squeezing the chest to bring the dumbbells back together over the chest."
     ],
     "breathing": "Inhale on the way out, exhale as you bring the dumbbells together.",
@@ -257,7 +274,7 @@
       "Using momentum to bounce out of the bottom position."
     ],
     "pro_tips": [
-      "With only 5kg dumbbells this is a light isolation finisher, not a primary chest builder \u2014 sequence it after the Floor Press and Push-up variations, not before.",
+      "With only 5kg dumbbells this is a light isolation finisher, not a primary chest builder — sequence it after the Floor Press and Push-up variations, not before.",
       "Because the load is light, slow the eccentric down deliberately to 3-4 seconds to keep tension high."
     ],
     "progressions": [
@@ -267,7 +284,7 @@
     "regressions": [
       "Reduce range of motion slightly if you feel any shoulder pinching"
     ],
-    "safety": "This is an optional exercise \u2014 if you feel any anterior shoulder discomfort, skip it and rely on Push-ups and the Floor Press for chest volume instead.",
+    "safety": "This is an optional exercise — if you feel any anterior shoulder discomfort, skip it and rely on Push-ups and the Floor Press for chest volume instead.",
     "illustration": {
       "image": "floor-chest-fly.png",
       "alt": "Floor Chest Fly illustration",
@@ -277,6 +294,20 @@
       "slug": "floor-chest-fly-form",
       "url": "https://homedumbbellblueprint.com/videos/floor-chest-fly-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -298,7 +329,7 @@
     "setup": "Stand with feet hip-width apart, core braced, holding a dumbbell in each hand at shoulder height with palms facing forward, elbows slightly in front of your torso.",
     "execution": [
       "Press both dumbbells straight overhead until your arms are fully extended and the dumbbells are stacked over your ears, not out in front.",
-      "Avoid arching the lower back to gain height \u2014 brace the core and squeeze the glutes to keep the ribcage stacked over the pelvis.",
+      "Avoid arching the lower back to gain height — brace the core and squeeze the glutes to keep the ribcage stacked over the pelvis.",
       "Lower under control back to shoulder height."
     ],
     "breathing": "Exhale on the press up, inhale on the way down.",
@@ -332,7 +363,21 @@
       "url": "https://homedumbbellblueprint.com/videos/standing-shoulder-press-form",
       "qr": null
     },
-    "reps_note": "The last set is done seated on the floor to remove leg drive and isolate the shoulders."
+    "reps_note": "The last set is done seated on the floor to remove leg drive and isolate the shoulders.",
+    "recommendedLoads": {
+      "5": {
+        "repRange": "12-15"
+      },
+      "7.5": {
+        "repRange": "10-12"
+      },
+      "10": {
+        "repRange": "8-10"
+      },
+      "12.5": {
+        "repRange": "6-8"
+      }
+    }
   },
   {
     "id": "arnold-press",
@@ -365,7 +410,7 @@
       "Using leg drive to bounce the weight up."
     ],
     "pro_tips": [
-      "The rotation increases time under tension and recruits the front and side delt through a longer arc than a standard press \u2014 an efficient way to add stimulus without adding weight.",
+      "The rotation increases time under tension and recruits the front and side delt through a longer arc than a standard press — an efficient way to add stimulus without adding weight.",
       "Perform this seated on the floor with your back against a wall for extra stability if balance is an issue."
     ],
     "progressions": [
@@ -385,6 +430,17 @@
       "slug": "arnold-press-form",
       "url": "https://homedumbbellblueprint.com/videos/arnold-press-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "12-15"
+      },
+      "7.5": {
+        "repRange": "10-12"
+      },
+      "10": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -405,7 +461,7 @@
     "execution": [
       "Raise both arms out to the sides simultaneously until they reach shoulder height, leading with the elbows rather than the hands.",
       "Keep a slight forward tilt of the torso and avoid shrugging the shoulders up toward the ears.",
-      "Lower with control back to your sides \u2014 do not let the dumbbells drop."
+      "Lower with control back to your sides — do not let the dumbbells drop."
     ],
     "breathing": "Exhale as you raise, inhale as you lower.",
     "tempo": "1-1-3-0",
@@ -417,7 +473,7 @@
       "Raising above shoulder height, which shifts load onto the traps instead of the side delt."
     ],
     "pro_tips": [
-      "This exercise responds extremely well to high reps and slow tempo at a fixed light load \u2014 it is one of the best places in the whole program to apply a 3-4 second lowering phase.",
+      "This exercise responds extremely well to high reps and slow tempo at a fixed light load — it is one of the best places in the whole program to apply a 3-4 second lowering phase.",
       "Try a 1.5-second pause at shoulder height every 5th rep to spike the difficulty without any added weight."
     ],
     "progressions": [
@@ -427,7 +483,7 @@
     "regressions": [
       "Perform one arm at a time, bracing the other hand on a wall for stability"
     ],
-    "safety": "Keep reps controlled \u2014 this is a small, easily-irritated joint and swinging heavy momentum through it is the most common cause of shoulder impingement in home training.",
+    "safety": "Keep reps controlled — this is a small, easily-irritated joint and swinging heavy momentum through it is the most common cause of shoulder impingement in home training.",
     "illustration": {
       "image": "lateral-raise.png",
       "alt": "Lateral Raise illustration",
@@ -438,7 +494,18 @@
       "url": "https://homedumbbellblueprint.com/videos/lateral-raise-form",
       "qr": null
     },
-    "tempo_note": "The slow, controlled lowering phase is the priority with a light fixed load."
+    "tempo_note": "The slow, controlled lowering phase is the priority with a light fixed load.",
+    "recommendedLoads": {
+      "2": {
+        "repRange": "20-25"
+      },
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "10-15"
+      }
+    }
   },
   {
     "id": "front-raise",
@@ -471,7 +538,7 @@
       "Raising higher than shoulder height, which reduces tension on the target muscle."
     ],
     "pro_tips": [
-      "The front delt already receives significant work from pressing exercises \u2014 keep this exercise to 1-2 sets per week as a finisher rather than a primary movement to avoid overuse.",
+      "The front delt already receives significant work from pressing exercises — keep this exercise to 1-2 sets per week as a finisher rather than a primary movement to avoid overuse.",
       "Alternating arms rather than raising both together allows a slightly longer time under tension per set."
     ],
     "progressions": [
@@ -480,7 +547,7 @@
     "regressions": [
       "Reduce range of motion to just below shoulder height if you feel any front-of-shoulder discomfort"
     ],
-    "safety": "Keep this exercise lower in weekly volume \u2014 overusing the front delt is a common cause of shoulder fatigue in dumbbell-only programs.",
+    "safety": "Keep this exercise lower in weekly volume — overusing the front delt is a common cause of shoulder fatigue in dumbbell-only programs.",
     "illustration": {
       "image": "front-raise.png",
       "alt": "Front Raise illustration",
@@ -490,6 +557,17 @@
       "slug": "front-raise-form",
       "url": "https://homedumbbellblueprint.com/videos/front-raise-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "2": {
+        "repRange": "20-25"
+      },
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "10-15"
+      }
     }
   },
   {
@@ -522,7 +600,7 @@
       "Arching the lower back to compensate for shoulder tightness."
     ],
     "pro_tips": [
-      "This is the only exercise in the program that directly targets the long head of the triceps through a full overhead stretch \u2014 a muscle that push-ups and floor presses under-train.",
+      "This is the only exercise in the program that directly targets the long head of the triceps through a full overhead stretch — a muscle that push-ups and floor presses under-train.",
       "Sitting on the floor with a tall spine removes the temptation to use body momentum."
     ],
     "progressions": [
@@ -531,7 +609,7 @@
     "regressions": [
       "Reduce the range of motion until shoulder overhead mobility improves"
     ],
-    "safety": "Keep control at the bottom of the stretch \u2014 dropping the dumbbell behind the head is a genuine risk. Use both hands until confident.",
+    "safety": "Keep control at the bottom of the stretch — dropping the dumbbell behind the head is a genuine risk. Use both hands until confident.",
     "illustration": {
       "image": "overhead-triceps-extension.png",
       "alt": "Overhead Triceps Extension illustration",
@@ -541,6 +619,20 @@
       "slug": "overhead-triceps-extension-form",
       "url": "https://homedumbbellblueprint.com/videos/overhead-triceps-extension-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -575,7 +667,7 @@
       "Rounding the lower back under the hip hinge instead of keeping it neutral."
     ],
     "pro_tips": [
-      "This is the single most important back-building exercise in the entire program \u2014 with no pull-up bar available, it carries almost all vertical and horizontal pulling volume. Prioritize a slow 3-second lowering phase to maximize the stimulus at 5kg.",
+      "This is the single most important back-building exercise in the entire program — with no pull-up bar available, it carries almost all vertical and horizontal pulling volume. Prioritize a slow 3-second lowering phase to maximize the stimulus at 5kg.",
       "Pause for 1-2 seconds at the top of every rep once bodyweight-equivalent tempo becomes too easy."
     ],
     "progressions": [
@@ -585,7 +677,7 @@
     "regressions": [
       "Perform seated with a shorter hinge if lower back fatigue is a limiter"
     ],
-    "safety": "The hip hinge position is held under time \u2014 if your lower back rounds or fatigues before your target reps, stop the set and rest longer next time rather than pushing through with poor form.",
+    "safety": "The hip hinge position is held under time — if your lower back rounds or fatigues before your target reps, stop the set and rest longer next time rather than pushing through with poor form.",
     "illustration": {
       "image": "bent-over-row.png",
       "alt": "Bent-over Row illustration",
@@ -595,6 +687,23 @@
       "slug": "bent-over-row-form",
       "url": "https://homedumbbellblueprint.com/videos/bent-over-row-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      },
+      "15": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -630,8 +739,8 @@
       "Cutting the range of motion short at the bottom, missing the full stretch."
     ],
     "pro_tips": [
-      "The supported single-arm row (chair replacing a bench) allows the deepest, safest range of motion for the back of any pulling exercise in this program \u2014 that longer stretch-to-squeeze range is your main lever for growth at a fixed 5kg.",
-      "Since the working arm's supporting side is fixed, this is naturally a unilateral exercise \u2014 a key growth tool when total load cannot increase."
+      "The supported single-arm row (chair replacing a bench) allows the deepest, safest range of motion for the back of any pulling exercise in this program — that longer stretch-to-squeeze range is your main lever for growth at a fixed 5kg.",
+      "Since the working arm's supporting side is fixed, this is naturally a unilateral exercise — a key growth tool when total load cannot increase."
     ],
     "progressions": [
       "Add a 2-second pause at the top squeeze",
@@ -650,6 +759,23 @@
       "slug": "single-arm-row-form",
       "url": "https://homedumbbellblueprint.com/videos/single-arm-row-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      },
+      "15": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -682,7 +808,7 @@
       "Using momentum by jerking the arms upward instead of a smooth arc."
     ],
     "pro_tips": [
-      "The rear delts and upper back are chronically undertrained in home programs built around push-ups and presses \u2014 this exercise directly balances shoulder health and posture, and deserves consistent weekly volume.",
+      "The rear delts and upper back are chronically undertrained in home programs built around push-ups and presses — this exercise directly balances shoulder health and posture, and deserves consistent weekly volume.",
       "High reps with a slow eccentric are far more effective here than trying to move fast; the muscle is small and responds well to control."
     ],
     "progressions": [
@@ -692,7 +818,7 @@
     "regressions": [
       "Perform seated on the edge of a chair, hinged forward, to reduce lower back demand"
     ],
-    "safety": "Keep the hip hinge steady throughout the set \u2014 if your lower back starts to round or ache, end the set early.",
+    "safety": "Keep the hip hinge steady throughout the set — if your lower back starts to round or ache, end the set early.",
     "illustration": {
       "image": "reverse-fly.png",
       "alt": "Reverse Fly illustration",
@@ -702,6 +828,17 @@
       "slug": "reverse-fly-form",
       "url": "https://homedumbbellblueprint.com/videos/reverse-fly-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "2": {
+        "repRange": "20-25"
+      },
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      }
     }
   },
   {
@@ -734,7 +871,7 @@
       "Using momentum from the knees to help lift the weight."
     ],
     "pro_tips": [
-      "At a fixed 5kg per hand, the top-of-rep pause is essential \u2014 without it this exercise loses almost all of its stimulus. Hold for a full 2 seconds at the top on every single rep.",
+      "At a fixed 5kg per hand, the top-of-rep pause is essential — without it this exercise loses almost all of its stimulus. Hold for a full 2 seconds at the top on every single rep.",
       "This pairs naturally at the end of a Pull day as a short, high-rep finisher."
     ],
     "progressions": [
@@ -744,7 +881,7 @@
     "regressions": [
       "Reduce range of motion if neck tension develops"
     ],
-    "safety": "Keep the neck relaxed and avoid tilting the head forward or back \u2014 the movement should come entirely from the shoulders.",
+    "safety": "Keep the neck relaxed and avoid tilting the head forward or back — the movement should come entirely from the shoulders.",
     "illustration": {
       "image": "shrugs.png",
       "alt": "Shrugs illustration",
@@ -754,6 +891,26 @@
       "slug": "shrugs-form",
       "url": "https://homedumbbellblueprint.com/videos/shrugs-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "20-25"
+      },
+      "7.5": {
+        "repRange": "15-20"
+      },
+      "10": {
+        "repRange": "12-15"
+      },
+      "12.5": {
+        "repRange": "10-12"
+      },
+      "15": {
+        "repRange": "8-10"
+      },
+      "17.5": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -773,7 +930,7 @@
     "setup": "Stand tall, dumbbell in each hand at your sides, palms facing your body (neutral grip) throughout the entire movement.",
     "execution": [
       "Curl both dumbbells up toward your shoulders while keeping the palms facing each other the whole time.",
-      "Keep the elbows pinned to your sides \u2014 they should not drift forward.",
+      "Keep the elbows pinned to your sides — they should not drift forward.",
       "Lower with control to a full arm extension at the bottom."
     ],
     "breathing": "Exhale on the curl up, inhale on the lower.",
@@ -786,7 +943,7 @@
       "Letting the elbows travel forward, which shortens the range and reduces tension."
     ],
     "pro_tips": [
-      "The neutral grip targets the brachialis, the muscle underneath the biceps that adds width to the arm when viewed from the side \u2014 a useful complement to the standard biceps curl.",
+      "The neutral grip targets the brachialis, the muscle underneath the biceps that adds width to the arm when viewed from the side — a useful complement to the standard biceps curl.",
       "Alternate arms and add a 1-2 second squeeze at the top to extend time under tension at this fixed load."
     ],
     "progressions": [
@@ -806,6 +963,20 @@
       "slug": "hammer-curl-form",
       "url": "https://homedumbbellblueprint.com/videos/hammer-curl-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -839,7 +1010,7 @@
     ],
     "pro_tips": [
       "Because 5kg becomes easy for the biceps quickly, this is a prime candidate for a mechanical drop set: perform standard curls to fatigue, then immediately continue with hammer curls using the same dumbbells to keep training the muscle from a slightly different angle.",
-      "A full stretch at the bottom of every rep meaningfully increases the growth stimulus at a light fixed load \u2014 do not shortchange the bottom position."
+      "A full stretch at the bottom of every rep meaningfully increases the growth stimulus at a light fixed load — do not shortchange the bottom position."
     ],
     "progressions": [
       "Mechanical drop set: Biceps Curl to failure, straight into Hammer Curl",
@@ -848,9 +1019,9 @@
     "regressions": [
       "Alternate arms rather than curling both together to manage fatigue"
     ],
-    "safety": "Avoid letting the lower back arch to help swing the weight up \u2014 keep the ribcage stacked over the pelvis.",
+    "safety": "Avoid letting the lower back arch to help swing the weight up — keep the ribcage stacked over the pelvis.",
     "illustration": {
-      "image": "hammer-curl.png",
+      "image": "biceps-curl.png",
       "alt": "Biceps Curl illustration",
       "prompt": "Front-facing illustration of an athletic person standing in a bedroom curling two dumbbells with palms facing forward, elbows pinned at the sides, biceps flexed at the top of the movement, bright clean lighting, minimal home background, wearing grey shorts and navy tank top, flat vector illustration with bold outlines and two-tone navy/orange shading, straight-on eye-level camera angle."
     },
@@ -858,6 +1029,20 @@
       "slug": "biceps-curl-form",
       "url": "https://homedumbbellblueprint.com/videos/biceps-curl-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -902,7 +1087,7 @@
     "regressions": [
       "Raise only the upper body first, then only the legs, rather than both together"
     ],
-    "safety": "Keep the range of motion small and controlled \u2014 this is not meant to be a large, ballistic movement.",
+    "safety": "Keep the range of motion small and controlled — this is not meant to be a large, ballistic movement.",
     "illustration": {
       "image": "superman-back-extension.png",
       "alt": "Superman Back Extension illustration",
@@ -947,7 +1132,7 @@
       "Rising onto the toes instead of staying grounded through the whole foot."
     ],
     "pro_tips": [
-      "At a fixed 5kg, the goblet squat becomes primarily a high-rep, tempo-driven exercise \u2014 a 3-second lowering phase with a 2-second pause in the bottom position is one of the most effective ways to keep leg training challenging without more weight.",
+      "At a fixed 5kg, the goblet squat becomes primarily a high-rep, tempo-driven exercise — a 3-second lowering phase with a 2-second pause in the bottom position is one of the most effective ways to keep leg training challenging without more weight.",
       "This is the primary quad-dominant movement of every Leg day; perform it first while fresh."
     ],
     "progressions": [
@@ -967,6 +1152,23 @@
       "slug": "goblet-squat-form",
       "url": "https://homedumbbellblueprint.com/videos/goblet-squat-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "18-25"
+      },
+      "7.5": {
+        "repRange": "15-18"
+      },
+      "10": {
+        "repRange": "12-15"
+      },
+      "12.5": {
+        "repRange": "10-12"
+      },
+      "15": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -1001,8 +1203,8 @@
       "Rounding the lower back to reach further down."
     ],
     "pro_tips": [
-      "This is your primary hamstring and posterior chain builder in a program with no barbell \u2014 the quality of the hip hinge matters more here than anything else. Film yourself from the side occasionally to check the knee angle stays fixed.",
-      "The slow 3-second descent under a deep stretch is where nearly all the growth stimulus comes from at this fixed light load \u2014 do not rush it."
+      "This is your primary hamstring and posterior chain builder in a program with no barbell — the quality of the hip hinge matters more here than anything else. Film yourself from the side occasionally to check the knee angle stays fixed.",
+      "The slow 3-second descent under a deep stretch is where nearly all the growth stimulus comes from at this fixed light load — do not rush it."
     ],
     "progressions": [
       "Single-Leg Romanian Deadlift for a significant unilateral overload",
@@ -1011,7 +1213,7 @@
     "regressions": [
       "Reduce range of motion to just above the knee until hamstring flexibility improves"
     ],
-    "safety": "Stop the descent the moment your lower back begins to round \u2014 that is your true range of motion for today, not a fixed height.",
+    "safety": "Stop the descent the moment your lower back begins to round — that is your true range of motion for today, not a fixed height.",
     "illustration": {
       "image": "romanian-deadlift.png",
       "alt": "Romanian Deadlift illustration",
@@ -1021,6 +1223,26 @@
       "slug": "romanian-deadlift-form",
       "url": "https://homedumbbellblueprint.com/videos/romanian-deadlift-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      },
+      "15": {
+        "repRange": "6-8"
+      },
+      "17.5": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -1052,10 +1274,10 @@
     "rest": "60-75 seconds per side",
     "mistakes": [
       "Letting the hips rotate open instead of staying square to the floor.",
-      "Rushing the balance component \u2014 this exercise rewards patience far more than speed."
+      "Rushing the balance component — this exercise rewards patience far more than speed."
     ],
     "pro_tips": [
-      "This is your most advanced hamstring progression in the program \u2014 the unilateral loading roughly doubles the demand on each leg compared to the two-leg version, which is exactly how you keep progressing hamstring strength once the standard RDL feels easy at 5kg.",
+      "This is your most advanced hamstring progression in the program — the unilateral loading roughly doubles the demand on each leg compared to the two-leg version, which is exactly how you keep progressing hamstring strength once the standard RDL feels easy at 5kg.",
       "Touching the floating leg's toe lightly to the ground for balance is a completely acceptable regression while you build stability."
     ],
     "progressions": [
@@ -1076,6 +1298,20 @@
       "slug": "single-leg-rdl-form",
       "url": "https://homedumbbellblueprint.com/videos/single-leg-rdl-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "12-15"
+      },
+      "7.5": {
+        "repRange": "10-12"
+      },
+      "10": {
+        "repRange": "8-10"
+      },
+      "12.5": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -1131,6 +1367,23 @@
       "slug": "split-squat-form",
       "url": "https://homedumbbellblueprint.com/videos/split-squat-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      },
+      "15": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -1166,7 +1419,7 @@
       "Using the rear leg to push instead of keeping it purely for balance."
     ],
     "pro_tips": [
-      "This is the highest-difficulty quad and glute exercise in the program and is used as the standard bench-supported version's direct replacement \u2014 the elevated rear foot creates a deeper range of motion and higher single-leg demand than any two-leg squat could at 5kg.",
+      "This is the highest-difficulty quad and glute exercise in the program and is used as the standard bench-supported version's direct replacement — the elevated rear foot creates a deeper range of motion and higher single-leg demand than any two-leg squat could at 5kg.",
       "Confirm the chair cannot slide before loading it with your foot; test it with body weight first."
     ],
     "progressions": [
@@ -1186,6 +1439,20 @@
       "slug": "bulgarian-split-squat-form",
       "url": "https://homedumbbellblueprint.com/videos/bulgarian-split-squat-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "12-15"
+      },
+      "7.5": {
+        "repRange": "10-12"
+      },
+      "10": {
+        "repRange": "8-10"
+      },
+      "12.5": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -1240,6 +1507,23 @@
       "slug": "reverse-lunge-form",
       "url": "https://homedumbbellblueprint.com/videos/reverse-lunge-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "15-20"
+      },
+      "7.5": {
+        "repRange": "12-15"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      },
+      "15": {
+        "repRange": "6-8"
+      }
     }
   },
   {
@@ -1273,7 +1557,7 @@
       "Rushing through reps without pausing at the top contraction."
     ],
     "pro_tips": [
-      "Calves are notoriously stubborn and respond best to very high reps, slow tempo, and a full stretch-to-contraction range \u2014 exactly the profile a fixed 5kg dumbbell is well suited to provide.",
+      "Calves are notoriously stubborn and respond best to very high reps, slow tempo, and a full stretch-to-contraction range — exactly the profile a fixed 5kg dumbbell is well suited to provide.",
       "Perform single-leg calf raises once two-leg raises exceed 25 controlled reps to keep progressing without more weight."
     ],
     "progressions": [
@@ -1293,6 +1577,26 @@
       "slug": "standing-calf-raise-form",
       "url": "https://homedumbbellblueprint.com/videos/standing-calf-raise-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "20-25"
+      },
+      "7.5": {
+        "repRange": "18-22"
+      },
+      "10": {
+        "repRange": "15-20"
+      },
+      "12.5": {
+        "repRange": "12-15"
+      },
+      "15": {
+        "repRange": "10-12"
+      },
+      "17.5": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -1316,7 +1620,7 @@
       "Hold this position, keeping your back flat against the wall and your core braced.",
       "Push back up the wall to standing once the target time is reached."
     ],
-    "breathing": "Breathe steadily and continuously throughout the hold \u2014 do not hold your breath.",
+    "breathing": "Breathe steadily and continuously throughout the hold — do not hold your breath.",
     "tempo": "Isometric hold, no tempo",
     "sets": "3",
     "reps": "30-60 second holds",
@@ -1326,7 +1630,7 @@
       "Sliding too low or too high relative to a 90-degree knee bend."
     ],
     "pro_tips": [
-      "As a pure bodyweight isometric, this is an excellent finisher on Leg day or a burnout after the Goblet Squat \u2014 hold to a genuine time challenge rather than a rep count.",
+      "As a pure bodyweight isometric, this is an excellent finisher on Leg day or a burnout after the Goblet Squat — hold to a genuine time challenge rather than a rep count.",
       "Add the dumbbells resting on your thighs once bodyweight holds exceed 60 seconds comfortably."
     ],
     "progressions": [
@@ -1336,7 +1640,7 @@
     "regressions": [
       "Use a shallower knee bend (less than 90 degrees) until quad endurance improves"
     ],
-    "safety": "Stop the hold immediately if you feel sharp knee pain \u2014 mild muscular burn is expected, joint pain is not.",
+    "safety": "Stop the hold immediately if you feel sharp knee pain — mild muscular burn is expected, joint pain is not.",
     "illustration": {
       "image": "wall-sit.png",
       "alt": "Wall Sit illustration",
@@ -1369,7 +1673,7 @@
       "Squeeze your glutes to prevent your hips from sagging or piking upward.",
       "Hold the position while breathing steadily for the target duration."
     ],
-    "breathing": "Breathe continuously and steadily \u2014 never hold your breath during the hold.",
+    "breathing": "Breathe continuously and steadily — never hold your breath during the hold.",
     "tempo": "Isometric hold",
     "sets": "3",
     "reps": "30-90 second holds",
@@ -1379,7 +1683,7 @@
       "Raising the hips too high, which turns the exercise into a stretch rather than a core hold."
     ],
     "pro_tips": [
-      "Progress the plank through time, not just by adding minutes blindly \u2014 once you exceed 90 seconds with a perfectly straight line, move to a weighted or unstable variation instead of chasing longer holds.",
+      "Progress the plank through time, not just by adding minutes blindly — once you exceed 90 seconds with a perfectly straight line, move to a weighted or unstable variation instead of chasing longer holds.",
       "A slight posterior pelvic tilt (imagine tucking your tailbone) helps engage the deep core correctly."
     ],
     "progressions": [
@@ -1389,7 +1693,7 @@
     "regressions": [
       "Perform from the knees instead of the toes"
     ],
-    "safety": "Stop the hold the moment your form breaks down \u2014 a shorter, well-formed hold is more valuable than a longer sagging one.",
+    "safety": "Stop the hold the moment your form breaks down — a shorter, well-formed hold is more valuable than a longer sagging one.",
     "illustration": {
       "image": "plank.png",
       "alt": "Plank illustration",
@@ -1420,7 +1724,7 @@
     "setup": "Sit on the floor with knees bent, feet either flat on the floor or lifted slightly for added difficulty. Lean back to roughly a 45-degree torso angle and hold one dumbbell with both hands at your chest.",
     "execution": [
       "Rotate your torso to tap the dumbbell lightly on the floor beside your hip.",
-      "Rotate through to the opposite side and tap the floor there as well \u2014 this full rotation counts as one rep.",
+      "Rotate through to the opposite side and tap the floor there as well — this full rotation counts as one rep.",
       "Keep the chest lifted and the rotation controlled throughout, avoiding a rounded lower back."
     ],
     "breathing": "Exhale with each rotation, inhale briefly between sides.",
@@ -1433,7 +1737,7 @@
       "Rounding the lower back to lean back further than the core can currently control."
     ],
     "pro_tips": [
-      "Keeping the feet on the floor is a completely legitimate and safer version of this exercise \u2014 lifting the feet only adds hip-flexor demand, it does not automatically make the exercise better.",
+      "Keeping the feet on the floor is a completely legitimate and safer version of this exercise — lifting the feet only adds hip-flexor demand, it does not automatically make the exercise better.",
       "Slow the rotation down deliberately rather than twisting quickly; oblique training responds well to control."
     ],
     "progressions": [
@@ -1443,7 +1747,7 @@
     "regressions": [
       "Perform without a dumbbell, hands clasped together instead"
     ],
-    "safety": "Stop if you feel any strain in the lower back rather than the intended oblique muscles \u2014 the rotation should be smooth and controlled, not forced.",
+    "safety": "Stop if you feel any strain in the lower back rather than the intended oblique muscles — the rotation should be smooth and controlled, not forced.",
     "illustration": {
       "image": "russian-twist.png",
       "alt": "Russian Twist illustration",
@@ -1453,6 +1757,20 @@
       "slug": "russian-twist-form",
       "url": "https://homedumbbellblueprint.com/videos/russian-twist-form",
       "qr": null
+    },
+    "recommendedLoads": {
+      "5": {
+        "repRange": "16-24"
+      },
+      "7.5": {
+        "repRange": "12-16"
+      },
+      "10": {
+        "repRange": "10-12"
+      },
+      "12.5": {
+        "repRange": "8-10"
+      }
     }
   },
   {
@@ -1474,7 +1792,7 @@
     "execution": [
       "Keeping your legs straight, raise them together until they reach roughly vertical.",
       "Lower them back down under complete control, stopping just before your heels touch the floor.",
-      "Keep your lower back pressed into the floor throughout \u2014 do not let it arch as the legs lower."
+      "Keep your lower back pressed into the floor throughout — do not let it arch as the legs lower."
     ],
     "breathing": "Exhale as you raise the legs, inhale as you lower.",
     "tempo": "1-1-3-0",
@@ -1486,7 +1804,7 @@
       "Using momentum to swing the legs up quickly."
     ],
     "pro_tips": [
-      "If you feel the lower back arching before the legs reach the floor, that is your true range of motion for today \u2014 stop there and lower only to that point until control improves.",
+      "If you feel the lower back arching before the legs reach the floor, that is your true range of motion for today — stop there and lower only to that point until control improves.",
       "This bodyweight exercise scales entirely through range of motion and tempo, making it ideal for continued progress without any equipment at all."
     ],
     "progressions": [
@@ -1529,7 +1847,7 @@
     "execution": [
       "Drive one knee toward your chest while keeping the other leg extended.",
       "Quickly switch legs, driving the other knee forward as the first returns to the plank position.",
-      "Keep the hips low and stable throughout \u2014 they should not bounce up and down."
+      "Keep the hips low and stable throughout — they should not bounce up and down."
     ],
     "breathing": "Breathe rhythmically with the leg switches; do not hold your breath.",
     "tempo": "Fast or slow",
@@ -1541,7 +1859,7 @@
       "Losing the flat-back plank position as fatigue sets in."
     ],
     "pro_tips": [
-      "This is the program's main bodyweight conditioning tool \u2014 use it at the end of a session as a metabolic finisher, or slow it down deliberately as a controlled core exercise on lower-intensity days.",
+      "This is the program's main bodyweight conditioning tool — use it at the end of a session as a metabolic finisher, or slow it down deliberately as a controlled core exercise on lower-intensity days.",
       "Filming yourself from the side occasionally is a useful check that the hips are staying level throughout the set."
     ],
     "progressions": [
@@ -1606,7 +1924,7 @@
     "regressions": [
       "Move only the legs first, then only the arms, before combining both"
     ],
-    "safety": "The flat lower back position is non-negotiable for this exercise \u2014 reduce range of motion rather than lose it.",
+    "safety": "The flat lower back position is non-negotiable for this exercise — reduce range of motion rather than lose it.",
     "illustration": {
       "image": "dead-bug.png",
       "alt": "Dead Bug illustration",

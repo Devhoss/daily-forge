@@ -31,7 +31,7 @@ export function computeWeeklyStats(
     const weekSetLogs = setLogs.filter((sl) => weekDates.has(sl.date));
 
     const totalReps = weekSetLogs.reduce(
-      (sum, sl) => sum + (sl.repsCompleted ?? 0),
+      (sum, sl) => sum + (sl.repsCompleted ?? sl.holdDurationSeconds ?? 0),
       0,
     );
 
@@ -74,7 +74,7 @@ export function computeOverallStats(
 ): OverallStats {
   const completed = sessionLogs.filter((s) => s.completed);
   const totalReps = setLogs.reduce(
-    (sum, sl) => sum + (sl.repsCompleted ?? 0),
+    (sum, sl) => sum + (sl.repsCompleted ?? sl.holdDurationSeconds ?? 0),
     0,
   );
   const rpeValues = completed

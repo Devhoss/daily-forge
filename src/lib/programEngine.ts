@@ -13,11 +13,8 @@ export interface TodayInfo {
 
 export function getNextWorkoutLabel(dayIndex: number): string {
   const template = program.weekly_template;
-  for (let offset = 1; offset <= template.length; offset++) {
-    const entry = template[(dayIndex + offset) % template.length];
-    if (entry.session_key !== "rest") return entry.label;
-  }
-  return "";
+  const tomorrow = template[(dayIndex + 1) % template.length];
+  return tomorrow.label;
 }
 
 function parseLocalDate(iso: string): Date {

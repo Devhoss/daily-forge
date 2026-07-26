@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, Calendar, RotateCcw, Trash2, Info, Bell, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Calendar, Dumbbell, RotateCcw, Trash2, Info, Bell, AlertTriangle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { NotificationCard } from "@/components/NotificationCard";
 import { getProgramStartDate, setProgramStartDate, resetProgress, resetAllData } from "@/lib/db";
+import { getEquipmentProfile, saveEquipmentProfile, ALL_DUMBBELL_WEIGHTS, type EquipmentProfile } from "@/lib/equipment";
 import { cn } from "@/lib/utils";
 
 export function Settings() {
@@ -12,11 +13,14 @@ export function Settings() {
   const [startDate, setStartDateState] = useState<string>("");
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [confirmAction, setConfirmAction] = useState<"restart" | "reset" | null>(null);
+  const [equipment, setEquipment] = useState<EquipmentProfile | null>(null);
 
   useEffect(() => {
-    getProgramStartDate().then((d) => {
+    (async () => {
+      const [d, eq] = await Promise.all([getProgramStartDate(), getEquipmentProfile()]);
       if (d) setStartDateState(d);
-    });
+      setEquipment(eq);
+    })();
   }, []);
 
   async function handleDateChange(date: string) {
@@ -105,6 +109,78 @@ export function Settings() {
           )}
         </Card>
       </motion.div>
+
+      <div className="mt-8 px-5">
+        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-500">
+          <Dumbbell size={14} /> Equipment
+        </p>
+      </div>
+
+      {equipment && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.15 }}
+          className="mt-3 px-5"
+        >
+          <Card>
+            <p className="text-xs font-semibold text-slate-400">Dumbbells (kg)</p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {ALL_DUMBBELL_WEIGHTS.map((w) => {
+                const selected = equipment.dumbbells.includes(w);
+                return (
+                  <button
+                    key={w}
+                    onClick={() => {
+                      const next = selected
+                        ? equipment.dumbbells.filter((d) => d !== w)
+                        : [...equipment.dumbbells, w].sort((a, b) => a - b);
+                      const updated = { ...equipment, dumbbells: next };
+                      setEquipment(updated);
+                      saveEquipmentProfile(updated);
+                    }}
+                    className={cn(
+                      'rounded-lg border px-3 py-1.5 text-xs font-semibold transition',
+                      selected
+                        ? 'border-blue-500/40 bg-blue-500/15 text-blue-400'
+                        : 'border-white/10 bg-white/5 text-slate-500',
+                    )}
+                  >
+                    {w}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 space-y-2">
+              {([
+                { key: 'hasBench', label: 'Bench' },
+                { key: 'hasBands', label: 'Resistance Bands' },
+                { key: 'hasPullUpBar', label: 'Pull-up Bar' },
+                { key: 'hasMat', label: 'Exercise Mat' },
+                { key: 'hasKettlebell', label: 'Kettlebell' },
+              ] as const).map(({ key, label }) => (
+                <label
+                  key={key}
+                  className="flex cursor-pointer items-center gap-3 rounded-lg bg-white/[0.03] px-3 py-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={(equipment as any)[key] as boolean}
+                    onChange={() => {
+                      const updated = { ...equipment, [key]: !(equipment as any)[key] };
+                      setEquipment(updated);
+                      saveEquipmentProfile(updated);
+                    }}
+                    className="h-4 w-4 accent-blue-500"
+                  />
+                  <span className="text-sm text-slate-300">{label}</span>
+                </label>
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      )}
 
       <div className="mt-8 px-5">
         <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-red-400">

@@ -1,15 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { getExercisesForSession, resolveIllustrationSrc, isPortraitExercise, program } from '@/lib/data';
+import { App } from '@capacitor/app';
+import { LocalNotifications } from '@capacitor/local-notifications';
+import { getExercisesForSession, resolveIllustrationSrc, isPortraitExercise, isTimeBasedExercise, parseHoldDuration, program } from '@/lib/data';
 import { db, upsertSessionLog, getProgramStartDate, getAllSetLogs, getAllSessionLogs } from '@/lib/db';
 import { computeCurrentStreak } from '@/lib/analytics';
 import { getTodayInfo, todayIso } from '@/lib/programEngine';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
 import { RestTimer, parseRestSeconds, ensureRestAudio } from '@/components/RestTimer';
+import { CoachBar, CoachSheet } from '@/components/ExerciseCoach';
+import { startWorkoutNotification, updateExerciseNotification, updateRestNotification, stopWorkoutNotification } from '@/lib/workoutNotification';
+import { saveWorkoutState, loadWorkoutState, clearWorkoutState } from '@/lib/workoutState';
 import { Flame, ChevronLeft, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { Exercise } from '@/types';
+
+const REST_NOTIFICATION_ID = 8888;
 
 function parseTargetSets(setsField: string): number {
   const numbers = setsField.match(/\d+/g);
@@ -41,6 +49,48 @@ function ExerciseDots({ total, current }: { total: number; current: number }) {
   );
 }
 
+function HoldTimer({
+  targetDuration,
+  initialElapsed,
+  onComplete,
+}: {
+  targetDuration: number;
+  initialElapsed?: number;
+  onComplete: (elapsed: number) => void;
+}) {
+  const [elapsed, setElapsed] = useState(initialElapsed ?? 0);
+  const intervalRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    intervalRef.current = window.setInterval(() => {
+      setElapsed((s) => s + 1);
+    }, 1000);
+    return () => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+    };
+  }, []);
+
+  const ee = Math.floor(elapsed / 60);
+  const ss = elapsed % 60;
+
+  return (
+    <div className="mt-8 text-center">
+      <p className="text-xs font-bold uppercase tracking-[0.1em] text-blue-400">
+        Hold Timer
+      </p>
+      <p className="mt-5 text-5xl font-bold tabular-nums text-white">
+        {ee}:{String(ss).padStart(2, '0')}
+      </p>
+      <p className="mt-2 text-xs text-slate-500">
+        Target: {targetDuration}s
+      </p>
+      <Button className="mt-6" size="lg" onClick={() => onComplete(elapsed)}>
+        Complete Hold
+      </Button>
+    </div>
+  );
+}
+
 export function WorkoutMode() {
   const { sessionKey } = useParams<{ sessionKey: string }>();
   const navigate = useNavigate();
@@ -56,6 +106,70 @@ export function WorkoutMode() {
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [repsInput, setRepsInput] = useState<number>(0);
   const [showExitDialog, setShowExitDialog] = useState(false);
+  const [showCoach, setShowCoach] = useState(false);
+  const restEndRef = useRef<number | null>(null);
+  const [restOverrideSeconds, setRestOverrideSeconds] = useState<number | null>(null);
+  const [holdInitElapsed, setHoldInitElapsed] = useState(0);
+
+  /* Persistent workout notification */
+  useEffect(() => {
+    startWorkoutNotification(exerciseIndex, exercises.length);
+    return () => { stopWorkoutNotification(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (phase === 'resting') return;
+    updateExerciseNotification(exerciseIndex, exercises.length);
+  }, [phase, exerciseIndex, exercises.length]);
+
+  useEffect(() => {
+    let handle: { remove: () => void } | null = null;
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        LocalNotifications.cancel({ notifications: [{ id: REST_NOTIFICATION_ID }] }).catch(() => {});
+        if (phaseRef.current === 'resting' && restEndRef.current) {
+          const remaining = Math.max(0, Math.round((restEndRef.current - Date.now()) / 1000));
+          setRestOverrideSeconds(remaining);
+          if (remaining <= 0) setRestOverrideSeconds(0);
+        }
+      } else if (phaseRef.current === 'resting' && restEndRef.current) {
+        const remaining = Math.max(0, Math.round((restEndRef.current - Date.now()) / 1000));
+        if (remaining > 0) {
+          const idx = exerciseIndexRef.current;
+          const nextEx = exercisesRef.current[idx + 1];
+          const body = nextEx
+            ? `Next:\n${nextEx.name}\nSet ${setIndexRef.current + 2} of ${targetSetsRef.current}`
+            : 'Workout Summary is next';
+          LocalNotifications.schedule({
+            notifications: [{
+              id: REST_NOTIFICATION_ID,
+              title: 'Rest complete',
+              body,
+              schedule: { at: new Date(restEndRef.current) },
+              channelId: 'training-reminders',
+              smallIcon: 'ic_notification',
+              iconColor: '#3B82F6',
+              // extra data used by the notification tap listener
+              ...(sessionKey ? { data: { sessionKey } } : {}),
+            }],
+          }).catch(() => {});
+        }
+      }
+    }).then((h) => { handle = h; });
+    return () => { handle?.remove(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Notification tap → return to workout */
+  useEffect(() => {
+    const handler = LocalNotifications.addListener(
+      'localNotificationActionPerformed',
+      (n) => {
+        const sk = n.notification.extra?.sessionKey as string | undefined;
+        if (sk) navigate(`/workout/${sk}`, { replace: true });
+      },
+    );
+    return () => { handler.then((h) => h.remove()); };
+  }, [navigate]);
 
   useEffect(() => {
     getProgramStartDate().then((d) => {
@@ -63,10 +177,40 @@ export function WorkoutMode() {
     });
   }, []);
 
+  /* Workout state recovery */
+  useEffect(() => {
+    if (!sessionKey) return;
+    (async () => {
+      const saved = await loadWorkoutState();
+      if (saved && saved.sessionKey === sessionKey) {
+        setExerciseIndex(saved.exerciseIndex);
+        setSetIndex(saved.setIndex);
+        if (saved.repsInput > 0) setRepsInput(saved.repsInput);
+        if (saved.phase === 'resting') {
+          if (saved.restEndTime) {
+            const remaining = Math.max(0, Math.round((saved.restEndTime - Date.now()) / 1000));
+            restEndRef.current = saved.restEndTime;
+            if (remaining > 0) {
+              setRestOverrideSeconds(remaining);
+            } else {
+              setRestOverrideSeconds(0);
+            }
+          }
+          setPhase('resting');
+        }
+        if (saved.holdDurationTarget) {
+          setHoldInitElapsed(saved.holdDurationTarget);
+        }
+      }
+    })();
+  }, [sessionKey]);
+
   const exercisesList = exercises;
   useEffect(() => {
     const current = exercisesList[exerciseIndex];
-    if (current) setRepsInput(parseTargetReps(current.reps));
+    if (current && !isTimeBasedExercise(current)) {
+      setRepsInput(parseTargetReps(current.reps));
+    }
   }, [exerciseIndex, exercisesList]);
 
   if (!sessionKey || exercises.length === 0) {
@@ -84,8 +228,58 @@ export function WorkoutMode() {
   const targetSets = parseTargetSets(ex.sets);
   const img = resolveIllustrationSrc(ex);
   const portrait = isPortraitExercise(ex);
+  const isTimeBased = isTimeBasedExercise(ex);
   const isLastSetOfExercise = setIndex >= targetSets - 1;
   const isLastExercise = exerciseIndex >= exercises.length - 1;
+  const nextEx: Exercise | null = isLastExercise ? null : exercises[exerciseIndex + 1];
+
+  /* Background rest notifications (refs placed here so targetSets is in scope) */
+  const phaseRef = useRef(phase);
+  phaseRef.current = phase;
+  const exerciseIndexRef = useRef(exerciseIndex);
+  exerciseIndexRef.current = exerciseIndex;
+  const exercisesRef = useRef(exercises);
+  exercisesRef.current = exercises;
+  const setIndexRef = useRef(setIndex);
+  setIndexRef.current = setIndex;
+  const targetSetsRef = useRef(targetSets);
+  targetSetsRef.current = targetSets;
+
+  useEffect(() => {
+    let handle: { remove: () => void } | null = null;
+    App.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) {
+        LocalNotifications.cancel({ notifications: [{ id: REST_NOTIFICATION_ID }] }).catch(() => {});
+        if (phaseRef.current === 'resting' && restEndRef.current) {
+          const remaining = Math.max(0, Math.round((restEndRef.current - Date.now()) / 1000));
+          setRestOverrideSeconds(remaining);
+          if (remaining <= 0) setRestOverrideSeconds(0);
+        }
+      } else if (phaseRef.current === 'resting' && restEndRef.current) {
+        const remaining = Math.max(0, Math.round((restEndRef.current - Date.now()) / 1000));
+        if (remaining > 0) {
+          const idx = exerciseIndexRef.current;
+          const nextEx = exercisesRef.current[idx + 1];
+          const body = nextEx
+            ? `Next:\n${nextEx.name}\nSet ${setIndexRef.current + 2} of ${targetSetsRef.current}`
+            : 'Workout Summary is next';
+          LocalNotifications.schedule({
+            notifications: [{
+              id: REST_NOTIFICATION_ID,
+              title: 'Rest complete',
+              body,
+              schedule: { at: new Date(restEndRef.current) },
+              channelId: 'training-reminders',
+              smallIcon: 'ic_notification',
+              iconColor: '#3B82F6',
+              ...(sessionKey ? { data: { sessionKey } } : {}),
+            }],
+          }).catch(() => {});
+        }
+      }
+    }).then((h) => { handle = h; });
+    return () => { handle?.remove(); };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function logSet() {
     ensureRestAudio();
@@ -97,12 +291,52 @@ export function WorkoutMode() {
       repsCompleted: repsInput,
       completedAt: new Date().toISOString(),
     });
+    restEndRef.current = Date.now() + parseRestSeconds(ex.rest) * 1000;
+    setRestOverrideSeconds(null);
     setPhase('resting');
+    saveWorkoutState({
+      sessionKey: sessionKey!,
+      exerciseIndex,
+      setIndex,
+      phase: 'resting',
+      repsInput,
+      restEndTime: restEndRef.current,
+      restDuration: parseRestSeconds(ex.rest),
+      timestamp: Date.now(),
+    });
+  }
+
+  function logHold(durationSeconds: number) {
+    ensureRestAudio();
+    db.setLogs.add({
+      date: todayIso(),
+      sessionKey: sessionKey!,
+      exerciseId: ex.id,
+      setIndex,
+      holdDurationSeconds: durationSeconds,
+      repsCompleted: durationSeconds,
+      completedAt: new Date().toISOString(),
+    });
+    restEndRef.current = Date.now() + parseRestSeconds(ex.rest) * 1000;
+    setRestOverrideSeconds(null);
+    setPhase('resting');
+    saveWorkoutState({
+      sessionKey: sessionKey!,
+      exerciseIndex,
+      setIndex,
+      phase: 'resting',
+      repsInput: 0,
+      restEndTime: restEndRef.current,
+      restDuration: parseRestSeconds(ex.rest),
+      timestamp: Date.now(),
+    });
   }
 
   async function afterRest() {
+    LocalNotifications.cancel({ notifications: [{ id: REST_NOTIFICATION_ID }] }).catch(() => {});
     if (isLastSetOfExercise) {
       if (isLastExercise) {
+        await clearWorkoutState();
         await upsertSessionLog({
           date: todayIso(),
           weekNumber: weekNumber ?? 1,
@@ -114,10 +348,26 @@ export function WorkoutMode() {
         setExerciseIndex((i) => i + 1);
         setSetIndex(0);
         setPhase('exercise');
+        saveWorkoutState({
+          sessionKey: sessionKey!,
+          exerciseIndex: exerciseIndex + 1,
+          setIndex: 0,
+          phase: 'exercise',
+          repsInput,
+          timestamp: Date.now(),
+        });
       }
     } else {
       setSetIndex((s) => s + 1);
       setPhase('exercise');
+      saveWorkoutState({
+        sessionKey: sessionKey!,
+        exerciseIndex,
+        setIndex: setIndex + 1,
+        phase: 'exercise',
+        repsInput,
+        timestamp: Date.now(),
+      });
     }
   }
 
@@ -139,6 +389,8 @@ export function WorkoutMode() {
       transition={{ duration: 0.25 }}
       className="safe-top safe-bottom min-h-screen px-5 pb-10 pt-14 text-white"
     >
+      <CoachSheet exercise={ex} open={showCoach} onClose={() => setShowCoach(false)} />
+
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
@@ -184,7 +436,19 @@ export function WorkoutMode() {
                 Resume Workout
               </button>
               <button
-                onClick={() => navigate('/')}
+                onClick={() => {
+                  saveWorkoutState({
+                    sessionKey: sessionKey!,
+                    exerciseIndex,
+                    setIndex,
+                    phase: phase === 'resting' ? 'resting' : 'exercise',
+                    repsInput,
+                    restEndTime: restEndRef.current ?? undefined,
+                    restDuration: parseRestSeconds(ex.rest),
+                    timestamp: Date.now(),
+                  });
+                  navigate('/');
+                }}
                 className="flex-1 rounded-xl bg-white/10 py-3 text-sm font-semibold text-slate-300 transition active:scale-[0.97]"
               >
                 Exit
@@ -196,9 +460,11 @@ export function WorkoutMode() {
 
       <h1 className="mt-2 text-2xl font-extrabold leading-tight">{ex.name}</h1>
 
+      <CoachBar exercise={ex} onExpand={() => setShowCoach(true)} />
+
       <div
         className={cn(
-          'mt-4 overflow-hidden rounded-2xl',
+          'mt-3 overflow-hidden rounded-2xl',
           portrait ? 'relative aspect-[3/4] bg-[#0d1528]' : 'aspect-[4/3] bg-gradient-to-br from-[#101B34] to-[#16213E]',
         )}
       >
@@ -212,13 +478,17 @@ export function WorkoutMode() {
         ))}
       </div>
 
-      <div className="mt-4 flex gap-1.5">
+      <div className="mt-3 flex gap-1.5">
         <Chip variant="accent">{`Set ${setIndex + 1} / ${targetSets}`}</Chip>
-        <Chip variant="slate">{`${ex.reps} reps`}</Chip>
+        {isTimeBased ? (
+          <Chip variant="emerald">{`Hold ${parseHoldDuration(ex.reps)}s`}</Chip>
+        ) : (
+          <Chip variant="slate">{`${ex.reps} reps`}</Chip>
+        )}
         <Chip variant="slate">{`Tempo ${ex.tempo}`}</Chip>
       </div>
 
-      {phase === 'exercise' && (
+      {phase === 'exercise' && !isTimeBased && (
         <div className="mt-8">
           <p className="text-xs font-bold uppercase tracking-[0.1em] text-slate-400">
             Reps completed
@@ -246,9 +516,26 @@ export function WorkoutMode() {
         </div>
       )}
 
+      {phase === 'exercise' && isTimeBased && (
+        <HoldTimer
+          targetDuration={parseHoldDuration(ex.reps)}
+          initialElapsed={holdInitElapsed > 0 ? holdInitElapsed : undefined}
+          onComplete={logHold}
+        />
+      )}
+
       {phase === 'resting' && (
         <div className="mt-8">
-          <RestTimer seconds={parseRestSeconds(ex.rest)} onDone={afterRest} />
+          <RestTimer
+            seconds={restOverrideSeconds != null ? restOverrideSeconds : parseRestSeconds(ex.rest)}
+            onDone={afterRest}
+            onTick={(remaining) => { updateRestNotification(remaining); }}
+            nextExercise={nextEx}
+            currentSetIndex={setIndex}
+            currentSetReps={repsInput}
+            targetSets={targetSets}
+            isLastExercise={isLastExercise && isLastSetOfExercise}
+          />
         </div>
       )}
     </motion.div>
@@ -287,7 +574,7 @@ function SessionSummary({
         getProgramStartDate(),
       ]);
       const mySetLogs = setLogs.filter((l) => l.date === todayLocal && l.sessionKey === sessionKey);
-      const reps = mySetLogs.reduce((s, l) => s + (l.repsCompleted ?? 0), 0);
+      const reps = mySetLogs.reduce((s, l) => s + (l.repsCompleted ?? l.holdDurationSeconds ?? 0), 0);
       setTotalReps(reps);
 
       if (mySetLogs.length > 0) {
@@ -329,7 +616,7 @@ function SessionSummary({
   const statCards = [
     { label: exerciseCount === 1 ? 'Exercise' : 'Exercises', value: String(exerciseCount) },
     { label: 'Duration', value: `${durationMin}<span class="text-sm font-medium text-slate-400">m</span>` },
-    { label: 'Reps', value: String(totalReps) },
+    { label: 'Total Work', value: String(totalReps) },
   ];
 
   return (

@@ -1,5 +1,9 @@
 export type ExerciseCategory = 'Push' | 'Pull' | 'Legs' | 'Core';
 
+export interface RecommendedLoadEntry {
+  repRange: string;
+}
+
 export interface ExerciseIllustration {
   image: string | null;
   alt: string;
@@ -18,6 +22,7 @@ export interface Exercise {
   category: ExerciseCategory;
   difficulty: number;
   equipment: string[];
+  recommendedLoads?: Record<string, RecommendedLoadEntry>;
   muscles_primary: string[];
   muscles_secondary: string[];
   setup: string;
