@@ -12,6 +12,8 @@ export interface WorkoutState {
   holdDurationTarget?: number;
   restEndTime?: number;
   restDuration?: number;
+  /** Wall-clock epoch (ms) when the workout was started, for accurate elapsed duration. */
+  startedAt?: number;
   timestamp: number;
 }
 

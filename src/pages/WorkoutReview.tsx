@@ -8,6 +8,8 @@ import { computeCurrentStreak } from "@/lib/analytics";
 import { gatherMilestoneData, getNewlyUnlockedMilestones } from "@/lib/milestones";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { formatDuration } from "@/lib/utils";
+import { humanizeEquipment } from "@/lib/equipment";
 import type { SessionLog, SetLog } from "@/lib/db";
 import type { Exercise } from "@/types";
 import { Dumbbell, Moon, ArrowRight, Clock, Zap, Target, Sparkles, TrendingUp, MessageSquare, Hexagon, Lightbulb } from "lucide-react";
@@ -31,13 +33,10 @@ function uniqueEquipment(exercises: Exercise[]): string[] {
   const out: string[] = [];
   for (const ex of exercises) {
     for (const eq of ex.equipment) {
-      const cleaned = eq
-        .replace(/\s*\(.*?\)\s*/g, "")
-        .replace(/optional/g, "")
-        .trim();
-      if (!seen.has(cleaned) && cleaned.length > 0) {
-        seen.add(cleaned);
-        out.push(cleaned);
+      const name = humanizeEquipment(eq);
+      if (!seen.has(name)) {
+        seen.add(name);
+        out.push(name);
       }
     }
   }
@@ -47,13 +46,6 @@ function uniqueEquipment(exercises: Exercise[]): string[] {
 function parseMinSets(setsField: string): number {
   const m = setsField.match(/(\d+)/);
   return m ? parseInt(m[1], 10) : 3;
-}
-
-function formatMinutes(m: number): string {
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  const min = m % 60;
-  return min > 0 ? `${h}h ${min}m` : `${h}h`;
 }
 
 /* ---------- Highlights ---------- */
@@ -271,7 +263,7 @@ export function WorkoutReview() {
           const sets = parseMinSets(ex.sets);
           const restMatch = ex.rest.match(/(\d+)/);
           const restSec = restMatch ? parseInt(restMatch[1], 10) : 60;
-          estimatedMin += sets * (40 + restSec);
+          estimatedMin += (sets * (40 + restSec)) / 60;
         }
       }
     }
@@ -298,7 +290,7 @@ export function WorkoutReview() {
     const currentData = gatherMilestoneData(allSessionLogs, allSetLogs, startDate);
     const newly = getNewlyUnlockedMilestones(prevData, currentData);
     return newly;
-  }, [allSessionLogs, allSetLogs, log, startDate, streak]);
+  }, [allSessionLogs, allSetLogs, log, startDate]);
 
   if (!loaded || !sessionKey) {
     return (
@@ -542,7 +534,7 @@ export function WorkoutReview() {
               <div>
                 <p className="text-sm font-bold text-white">{tomorrowInfo.label}</p>
                 {!tomorrowInfo.isRest && (
-                  <p className="text-xs text-slate-500">Est. {formatMinutes(tomorrowInfo.estimatedMin)}</p>
+                  <p className="text-xs text-slate-500">Est. {formatDuration(tomorrowInfo.estimatedMin)}</p>
                 )}
               </div>
               {tomorrowInfo.isRest && <Moon size={16} className="text-blue-400" />}

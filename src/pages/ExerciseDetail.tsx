@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Chip } from "@/components/ui/Chip";
 import { DifficultyDots } from "@/components/ui/DifficultyDots";
 import { cn } from "@/lib/utils";
+import { humanizeEquipment } from "@/lib/equipment";
 
 export function ExerciseDetail() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +56,7 @@ export function ExerciseDetail() {
           ))}
           {ex.equipment.map((m) => (
             <Chip key={m} variant="emerald">
-              {m}
+              {humanizeEquipment(m)}
             </Chip>
           ))}
         </div>

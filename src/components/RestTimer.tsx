@@ -198,7 +198,11 @@ export function RestTimer({
       className="flex flex-col items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-6"
     >
       <p className="text-xs font-bold uppercase tracking-[0.15em] text-orange-400">
-        {completed ? "Rest Complete" : isLastExercise ? "Final Rest" : "Rest"}
+        {completed
+          ? "Ready!"
+          : isLastExercise
+            ? "Final Rest"
+            : "Rest"}
       </p>
 
       <motion.div
@@ -237,7 +241,7 @@ export function RestTimer({
       <p className="text-sm text-slate-500">
         {completed
           ? autoCountdown > 0
-            ? `Continuing in ${autoCountdown}\u2026`
+            ? `Starting ${isLastExercise ? "summary" : (nextExercise?.name ?? "next exercise")} in ${autoCountdown}\u2026`
             : ""
           : !running
             ? "Paused"
@@ -257,26 +261,26 @@ export function RestTimer({
         </div>
       )}
 
-      {/* Upcoming exercise preview */}
-      {completed ? (
-        isLastExercise ? (
+      {/* Upcoming exercise preview (visible throughout rest) */}
+      {isLastExercise ? (
+        completed ? (
           <p className="text-sm font-medium text-emerald-400">
             Workout Summary is next
           </p>
-        ) : nextExercise ? (
-          <div className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left">
-            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
-              Next Exercise
-            </p>
-            <p className="mt-0.5 text-sm font-bold text-white">
-              {nextExercise.name}
-            </p>
-            <p className="mt-0.5 text-xs text-slate-500">
-              {targetSets != null ? `${targetSets} \u00d7 ` : ""}
-              {nextExercise.reps}
-            </p>
-          </div>
         ) : null
+      ) : nextExercise ? (
+        <div className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left">
+          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+            Next Exercise
+          </p>
+          <p className="mt-0.5 text-sm font-bold text-white">
+            {nextExercise.name}
+          </p>
+          <p className="mt-0.5 text-xs text-slate-500">
+            {targetSets != null ? `${targetSets} \u00d7 ` : ""}
+            {nextExercise.reps}
+          </p>
+        </div>
       ) : null}
 
       <div className="mt-1 flex w-full gap-2">

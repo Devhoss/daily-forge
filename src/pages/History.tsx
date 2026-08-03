@@ -5,7 +5,7 @@ import { getAllSessionLogs, getAllSetLogs } from '@/lib/db';
 import { program } from '@/lib/data';
 import type { SessionLog, SetLog } from '@/lib/db';
 import { Search, ChevronRight, Filter } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, formatDuration } from '@/lib/utils';
 
 type CategoryFilter = 'All' | 'Push' | 'Pull' | 'Legs' | 'Core';
 
@@ -139,7 +139,7 @@ export function History() {
                       day: 'numeric',
                     })}
                     {row.log.durationMin != null && (
-                      <> &middot; {row.log.durationMin}m</>
+                      <> &middot; {formatDuration(row.log.durationMin)}</>
                     )}
                     {row.log.rpe != null && <> &middot; RPE {row.log.rpe}</>}
                   </p>

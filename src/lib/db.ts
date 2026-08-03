@@ -54,6 +54,8 @@ export interface PhotoEntry {
   week: number;
   angle: 'front' | 'side' | 'back';
   blob: Blob;
+  source?: 'camera' | 'gallery';
+  exportedToGallery?: boolean;
 }
 
 class BlueprintDB extends Dexie {
@@ -122,6 +124,18 @@ export async function getReminderTime(): Promise<string> {
 
 export async function setReminderTime(time: string): Promise<void> {
   await db.settings.put({ key: REMINDER_TIME_KEY, value: time });
+}
+
+const SAVE_PHOTOS_TO_GALLERY_KEY = 'savePhotosToGallery';
+
+/** Whether camera-captured progress photos should also be written to the device gallery. Defaults to ON. */
+export async function getSavePhotosToGallery(): Promise<boolean> {
+  const row = await db.settings.get(SAVE_PHOTOS_TO_GALLERY_KEY);
+  return row ? row.value === 'true' : true;
+}
+
+export async function setSavePhotosToGallery(value: boolean): Promise<void> {
+  await db.settings.put({ key: SAVE_PHOTOS_TO_GALLERY_KEY, value: String(value) });
 }
 
 export async function getSessionLog(

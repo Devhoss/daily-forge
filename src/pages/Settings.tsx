@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, Calendar, Dumbbell, RotateCcw, Trash2, Info, Bell, AlertTriangle } from "lucide-react";
+import { ChevronLeft, Calendar, Dumbbell, RotateCcw, Trash2, Info, Bell, AlertTriangle, Camera } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { NotificationCard } from "@/components/NotificationCard";
 import { getProgramStartDate, setProgramStartDate, resetProgress, resetAllData } from "@/lib/db";
 import { getEquipmentProfile, saveEquipmentProfile, ALL_DUMBBELL_WEIGHTS, type EquipmentProfile } from "@/lib/equipment";
+import { useSettings } from "@/lib/SettingsContext";
 import { cn } from "@/lib/utils";
 
 export function Settings() {
   const navigate = useNavigate();
+  const { savePhotosToGallery, setSavePhotosToGallery } = useSettings();
   const [startDate, setStartDateState] = useState<string>("");
   const [showStartDatePicker, setShowStartDatePicker] = useState(false);
   const [confirmAction, setConfirmAction] = useState<"restart" | "reset" | null>(null);
@@ -181,6 +183,49 @@ export function Settings() {
           </Card>
         </motion.div>
       )}
+
+      <div className="mt-8 px-5">
+        <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-slate-500">
+          <Camera size={14} /> Photos
+        </p>
+      </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.18 }}
+        className="mt-3 px-5"
+      >
+        <Card>
+          <label className="flex cursor-pointer items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-500/15">
+              <Camera size={18} className="text-blue-400" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-bold text-white">Save photos to device gallery</p>
+              <p className="text-xs text-slate-400">
+                Camera captures are copied to the device gallery (Pictures/DailyForge).
+              </p>
+            </div>
+            <button
+              role="switch"
+              aria-checked={savePhotosToGallery}
+              onClick={() => setSavePhotosToGallery(!savePhotosToGallery)}
+              className={cn(
+                "relative h-7 w-12 shrink-0 appearance-none overflow-hidden rounded-full border-0 p-0 outline-none transition-colors",
+                savePhotosToGallery ? "bg-blue-500" : "bg-white/10",
+              )}
+            >
+              <span
+                className={cn(
+                  "absolute top-1 left-1 h-5 w-5 rounded-full bg-white transition-transform",
+                  savePhotosToGallery ? "translate-x-5" : "translate-x-0",
+                )}
+              />
+            </button>
+          </label>
+        </Card>
+      </motion.div>
 
       <div className="mt-8 px-5">
         <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.1em] text-red-400">

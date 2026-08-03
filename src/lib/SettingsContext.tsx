@@ -11,6 +11,8 @@ import {
   setNotificationsEnabled as persistNotificationsEnabled,
   getReminderTime,
   setReminderTime as persistReminderTime,
+  getSavePhotosToGallery,
+  setSavePhotosToGallery as persistSavePhotosToGallery,
 } from "@/lib/db";
 
 interface SettingsContextValue {
@@ -19,6 +21,8 @@ interface SettingsContextValue {
   reminderTime: string;
   setNotificationsEnabled: (value: boolean) => Promise<void>;
   setReminderTime: (value: string) => Promise<void>;
+  savePhotosToGallery: boolean;
+  setSavePhotosToGallery: (value: boolean) => Promise<void>;
   navRefreshKey: number;
   refreshNav: () => void;
 }
@@ -29,18 +33,21 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [loaded, setLoaded] = useState(false);
   const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
   const [reminderTime, setReminderTimeState] = useState("18:00");
+  const [savePhotosToGallery, setSavePhotosToGalleryState] = useState(true);
   const [navRefreshKey, setNavRefreshKey] = useState(0);
 
   const refreshNav = useCallback(() => setNavRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
     (async () => {
-      const [enabled, time] = await Promise.all([
+      const [enabled, time, savePhotos] = await Promise.all([
         getNotificationsEnabled(),
         getReminderTime(),
+        getSavePhotosToGallery(),
       ]);
       setNotificationsEnabledState(enabled);
       setReminderTimeState(time);
+      setSavePhotosToGalleryState(savePhotos);
       setLoaded(true);
     })();
   }, []);
@@ -55,6 +62,11 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await persistReminderTime(value);
   }
 
+  async function setSavePhotosToGallery(value: boolean) {
+    setSavePhotosToGalleryState(value);
+    await persistSavePhotosToGallery(value);
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -63,6 +75,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         reminderTime,
         setNotificationsEnabled,
         setReminderTime,
+        savePhotosToGallery,
+        setSavePhotosToGallery,
         navRefreshKey,
         refreshNav,
       }}

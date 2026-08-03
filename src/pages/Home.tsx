@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { StatCard } from "@/components/ui/StatCard";
 import { Onboarding } from "@/pages/Onboarding";
 import { useSettings } from "@/lib/SettingsContext";
+import { formatDuration } from "@/lib/utils";
 import { WeeklyTimeline } from "@/components/WeeklyTimeline";
 import type { SessionLog } from "@/lib/db";
 import {
@@ -288,7 +289,7 @@ export function Home() {
               {weekRow?.deload ? "Deload" : weekRow?.phase ?? "Training"} Phase
             </p>
             <div className="mt-1.5 text-sm text-slate-400">
-              {minutes} min &middot; {session?.exercises.length ?? 0} exercises
+              Est. {formatDuration(minutes)} &middot; {session?.exercises.length ?? 0} exercises
             </div>
             <Button
               size="lg"

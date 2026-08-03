@@ -5,6 +5,7 @@ import { getAllSessionLogs, getAllSetLogs, getProgramStartDate } from '@/lib/db'
 import { computeWeeklyStats, trimToLoggedWeeks, computeCurrentStreak, computeOverallStats, computeProgramCompletionPct, type WeeklyStat } from '@/lib/analytics';
 import { getExercise } from '@/lib/data';
 import { Card } from '@/components/ui/Card';
+import { formatDuration } from '@/lib/utils';
 import { gatherMilestoneData, computeMilestoneStates, getMilestonesByCategory, type MilestoneWithState } from '@/lib/milestones';
 import type { SessionLog, SetLog } from '@/lib/db';
 
@@ -234,19 +235,12 @@ function computePRs(sessionLogs: SessionLog[], setLogs: SetLog[], streak: number
   };
 }
 
-function formatMinutes(m: number): string {
-  if (m < 60) return `${m}m`;
-  const h = Math.floor(m / 60);
-  const min = m % 60;
-  return min > 0 ? `${h}h ${min}m` : `${h}h`;
-}
-
 function PRCard({ prs }: { prs: PRs }) {
   const items = [
-    { icon: <Clock size={14} className="text-orange-400" />, label: 'Longest Session', value: formatMinutes(prs.longestDuration) },
+    { icon: <Clock size={14} className="text-orange-400" />, label: 'Longest Session', value: formatDuration(prs.longestDuration) },
     { icon: <Zap size={14} className="text-blue-400" />, label: 'Most Reps (Session)', value: String(prs.highestReps) },
     { icon: <Flame size={14} className="text-orange-400" />, label: 'Best Streak', value: `${prs.bestStreak} ${prs.bestStreak === 1 ? 'day' : 'days'}` },
-    { icon: <TrendingUp size={14} className="text-emerald-400" />, label: 'Fastest Session', value: formatMinutes(prs.fastestSession) },
+    { icon: <TrendingUp size={14} className="text-emerald-400" />, label: 'Fastest Session', value: formatDuration(prs.fastestSession) },
   ];
 
   return (
@@ -419,7 +413,7 @@ export function ProgressOverview() {
         <MetricCard icon={<Flame size={16} className="text-orange-400" />} label="Current Streak" value={`${streaks.current}d`} sub={`Best: ${streaks.longest}d`} accent />
         <MetricCard icon={<Target size={16} className="text-blue-400" />} label="Completed" value={String(overall.totalSessionsCompleted)} sub={`${programPct}% of program`} />
         <MetricCard icon={<Zap size={16} className="text-emerald-400" />} label="Total Reps" value={String(totalReps)} sub={`Avg RPE ${overall.avgRpe ?? '—'}`} />
-        <MetricCard icon={<Clock size={16} className="text-blue-400" />} label="Training Time" value={formatMinutes(prs.totalTrainingTime)} sub={`${latest.consistencyPct}% this week`} />
+        <MetricCard icon={<Clock size={16} className="text-blue-400" />} label="Training Time" value={formatDuration(prs.totalTrainingTime)} sub={`${latest.consistencyPct}% this week`} />
       </motion.div>
 
       {/* Calendar heatmap */}

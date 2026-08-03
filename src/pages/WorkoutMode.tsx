@@ -13,8 +13,8 @@ import { RestTimer, parseRestSeconds, ensureRestAudio } from '@/components/RestT
 import { CoachBar, CoachSheet } from '@/components/ExerciseCoach';
 import { startWorkoutNotification, updateExerciseNotification, updateRestNotification, stopWorkoutNotification } from '@/lib/workoutNotification';
 import { saveWorkoutState, loadWorkoutState, clearWorkoutState } from '@/lib/workoutState';
-import { Flame, ChevronLeft, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Flame, ChevronLeft, X, ChevronDown } from 'lucide-react';
+import { cn, formatDuration } from '@/lib/utils';
 import type { Exercise } from '@/types';
 
 const REST_NOTIFICATION_ID = 8888;
@@ -110,6 +110,7 @@ export function WorkoutMode() {
   const restEndRef = useRef<number | null>(null);
   const [restOverrideSeconds, setRestOverrideSeconds] = useState<number | null>(null);
   const [holdInitElapsed, setHoldInitElapsed] = useState(0);
+  const startedAtRef = useRef<number>(Date.now());
 
   /* Persistent workout notification */
   useEffect(() => {
@@ -183,6 +184,7 @@ export function WorkoutMode() {
     (async () => {
       const saved = await loadWorkoutState();
       if (saved && saved.sessionKey === sessionKey) {
+        if (saved.startedAt) startedAtRef.current = saved.startedAt;
         setExerciseIndex(saved.exerciseIndex);
         setSetIndex(saved.setIndex);
         if (saved.repsInput > 0) setRepsInput(saved.repsInput);
@@ -213,27 +215,13 @@ export function WorkoutMode() {
     }
   }, [exerciseIndex, exercisesList]);
 
-  if (!sessionKey || exercises.length === 0) {
-    return (
-      <div className="p-6 text-white">
-        No session found.
-        <button onClick={() => navigate('/')} className="ml-2 text-orange-400">
-          Go home
-        </button>
-      </div>
-    );
-  }
-
   const ex = exercises[exerciseIndex];
   const targetSets = parseTargetSets(ex.sets);
-  const img = resolveIllustrationSrc(ex);
-  const portrait = isPortraitExercise(ex);
-  const isTimeBased = isTimeBasedExercise(ex);
   const isLastSetOfExercise = setIndex >= targetSets - 1;
   const isLastExercise = exerciseIndex >= exercises.length - 1;
   const nextEx: Exercise | null = isLastExercise ? null : exercises[exerciseIndex + 1];
 
-  /* Background rest notifications (refs placed here so targetSets is in scope) */
+  /* Refs holding latest values for background rest notifications (unconditional so hook order is stable) */
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
   const exerciseIndexRef = useRef(exerciseIndex);
@@ -245,41 +233,20 @@ export function WorkoutMode() {
   const targetSetsRef = useRef(targetSets);
   targetSetsRef.current = targetSets;
 
-  useEffect(() => {
-    let handle: { remove: () => void } | null = null;
-    App.addListener('appStateChange', ({ isActive }) => {
-      if (isActive) {
-        LocalNotifications.cancel({ notifications: [{ id: REST_NOTIFICATION_ID }] }).catch(() => {});
-        if (phaseRef.current === 'resting' && restEndRef.current) {
-          const remaining = Math.max(0, Math.round((restEndRef.current - Date.now()) / 1000));
-          setRestOverrideSeconds(remaining);
-          if (remaining <= 0) setRestOverrideSeconds(0);
-        }
-      } else if (phaseRef.current === 'resting' && restEndRef.current) {
-        const remaining = Math.max(0, Math.round((restEndRef.current - Date.now()) / 1000));
-        if (remaining > 0) {
-          const idx = exerciseIndexRef.current;
-          const nextEx = exercisesRef.current[idx + 1];
-          const body = nextEx
-            ? `Next:\n${nextEx.name}\nSet ${setIndexRef.current + 2} of ${targetSetsRef.current}`
-            : 'Workout Summary is next';
-          LocalNotifications.schedule({
-            notifications: [{
-              id: REST_NOTIFICATION_ID,
-              title: 'Rest complete',
-              body,
-              schedule: { at: new Date(restEndRef.current) },
-              channelId: 'training-reminders',
-              smallIcon: 'ic_notification',
-              iconColor: '#3B82F6',
-              ...(sessionKey ? { data: { sessionKey } } : {}),
-            }],
-          }).catch(() => {});
-        }
-      }
-    }).then((h) => { handle = h; });
-    return () => { handle?.remove(); };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!sessionKey || exercises.length === 0) {
+    return (
+      <div className="p-6 text-white">
+        No session found.
+        <button onClick={() => navigate('/')} className="ml-2 text-orange-400">
+          Go home
+        </button>
+      </div>
+    );
+  }
+
+  const img = resolveIllustrationSrc(ex);
+  const portrait = isPortraitExercise(ex);
+  const isTimeBased = isTimeBasedExercise(ex);
 
   async function logSet() {
     ensureRestAudio();
@@ -302,6 +269,7 @@ export function WorkoutMode() {
       repsInput,
       restEndTime: restEndRef.current,
       restDuration: parseRestSeconds(ex.rest),
+      startedAt: startedAtRef.current,
       timestamp: Date.now(),
     });
   }
@@ -328,6 +296,7 @@ export function WorkoutMode() {
       repsInput: 0,
       restEndTime: restEndRef.current,
       restDuration: parseRestSeconds(ex.rest),
+      startedAt: startedAtRef.current,
       timestamp: Date.now(),
     });
   }
@@ -342,6 +311,7 @@ export function WorkoutMode() {
           weekNumber: weekNumber ?? 1,
           sessionKey: sessionKey!,
           completed: true,
+          durationMin: Math.max(1, Math.round((Date.now() - startedAtRef.current) / 60000)),
         });
         setPhase('summary');
       } else {
@@ -354,6 +324,7 @@ export function WorkoutMode() {
           setIndex: 0,
           phase: 'exercise',
           repsInput,
+          startedAt: startedAtRef.current,
           timestamp: Date.now(),
         });
       }
@@ -376,6 +347,7 @@ export function WorkoutMode() {
       <SessionSummary
         sessionKey={sessionKey}
         weekNumber={weekNumber ?? 1}
+        startedAt={startedAtRef.current}
         onDone={() => navigate('/')}
       />
     );
@@ -445,6 +417,7 @@ export function WorkoutMode() {
                     repsInput,
                     restEndTime: restEndRef.current ?? undefined,
                     restDuration: parseRestSeconds(ex.rest),
+                    startedAt: startedAtRef.current,
                     timestamp: Date.now(),
                   });
                   navigate('/');
@@ -487,6 +460,28 @@ export function WorkoutMode() {
         )}
         <Chip variant="slate">{`Tempo ${ex.tempo}`}</Chip>
       </div>
+
+      {phase === 'exercise' && nextEx && (
+        <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
+          <div className="flex h-9 w-9 shrink-0 flex-col items-center justify-center rounded-xl bg-blue-500/15 text-blue-400">
+            <ChevronDown size={16} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-500">
+              Up Next
+            </p>
+            <p className="truncate text-sm font-bold text-white">{nextEx.name}</p>
+          </div>
+          <div className="shrink-0 text-right">
+            <p className="text-xs font-semibold tabular-nums text-slate-300">
+              {parseTargetSets(nextEx.sets)} &times; {nextEx.reps}
+            </p>
+            {nextEx.muscles_primary?.[0] && (
+              <p className="text-[10px] text-slate-500">{nextEx.muscles_primary[0]}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {phase === 'exercise' && !isTimeBased && (
         <div className="mt-8">
@@ -545,17 +540,19 @@ export function WorkoutMode() {
 function SessionSummary({
   sessionKey,
   weekNumber,
+  startedAt,
   onDone,
 }: {
   sessionKey: string;
   weekNumber: number;
+  startedAt: number;
   onDone: () => void;
 }) {
   const navigate = useNavigate();
   const session = sessionKey ? program.sessions[sessionKey] : undefined;
 
   const [rpe, setRpe] = useState(7);
-  const [durationMin, setDurationMin] = useState(40);
+  const durationMin = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
   const [energy, setEnergy] = useState(3);
   const [notes, setNotes] = useState('');
   const [totalReps, setTotalReps] = useState(0);
@@ -577,15 +574,6 @@ function SessionSummary({
       const reps = mySetLogs.reduce((s, l) => s + (l.repsCompleted ?? l.holdDurationSeconds ?? 0), 0);
       setTotalReps(reps);
 
-      if (mySetLogs.length > 0) {
-        const first = mySetLogs[0];
-        const last = mySetLogs[mySetLogs.length - 1];
-        const elapsed = Math.round(
-          (new Date(last.completedAt).getTime() - new Date(first.completedAt).getTime()) / 60000,
-        );
-        setDurationMin(Math.max(10, elapsed));
-      }
-
       if (startDate) {
         setStreak(computeCurrentStreak(sessionLogs, startDate));
         const weekSessions = sessionLogs.filter(
@@ -598,13 +586,14 @@ function SessionSummary({
 
   async function finish() {
     setSaving(true);
+    const finalDuration = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
     await upsertSessionLog({
       date: todayLocal,
       weekNumber,
       sessionKey,
       completed: true,
       rpe,
-      durationMin,
+      durationMin: finalDuration,
       energy,
       notes,
     });
@@ -615,7 +604,7 @@ function SessionSummary({
 
   const statCards = [
     { label: exerciseCount === 1 ? 'Exercise' : 'Exercises', value: String(exerciseCount) },
-    { label: 'Duration', value: `${durationMin}<span class="text-sm font-medium text-slate-400">m</span>` },
+    { label: 'Duration', value: formatDuration(durationMin) },
     { label: 'Total Work', value: String(totalReps) },
   ];
 
