@@ -2,11 +2,19 @@ import type { LocalNotificationSchema } from '@capacitor/local-notifications';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { getTodayInfo } from '@/lib/programEngine';
 import { program } from '@/lib/data';
+import {
+  getAllSessionLogs,
+  getAllSetLogs,
+  getAllMeasurements,
+} from '@/lib/db';
+import { getEquipmentProfile } from '@/lib/equipment';
+import { buildDailyNotifications } from '@/services/notifications/notificationEngine';
 
 const ROLLING_WINDOW_DAYS = 55; // stays safely under iOS's 64-pending-notification cap
 const CHANNEL_ID = 'training-reminders';
 const SMALL_ICON = 'ic_notification';
 const ICON_COLOR = '#3B82F6'; // blue-500
+const COACHED_ID_BASE = 900000; // id range reserved for coached notifications
 
 function sessionReminderBody(sessionKey: string): string {
   const session = program.sessions[sessionKey];
@@ -122,7 +130,39 @@ export async function refreshDailyReminders(
     const notifications: LocalNotificationSchema[] = [];
     const today = new Date();
 
-    for (let i = 0; i < ROLLING_WINDOW_DAYS; i++) {
+    // Today's notification comes from the NotificationEngine (pure service):
+    // it decides whether anything is important enough to interrupt and formats
+    // a self-explaining payload. If it returns nothing, fall back to the plain
+    // training reminder (or nothing on rest days).
+    const [sessionLogs, setLogs, measurements, equipment] = await Promise.all([
+      getAllSessionLogs(),
+      getAllSetLogs(),
+      getAllMeasurements(),
+      getEquipmentProfile(),
+    ]);
+    const coached = buildDailyNotifications(sessionLogs, setLogs, measurements, {
+      startIso,
+      asOf: today,
+      reminderTime,
+      availableWeights: equipment.dumbbells,
+    });
+    const coachedScheduledFor = coached.length > 0 ? new Date(coached[0].scheduledFor).getTime() : 0;
+    const useCoachedToday = coachedScheduledFor > Date.now();
+    if (coached.length > 0 && useCoachedToday) {
+      const n = coached[0];
+      notifications.push({
+        id: COACHED_ID_BASE + 1,
+        title: n.title,
+        body: n.body,
+        schedule: { at: new Date(n.scheduledFor) },
+        channelId: CHANNEL_ID,
+        smallIcon: SMALL_ICON,
+        iconColor: ICON_COLOR,
+      });
+    }
+
+    const windowStart = useCoachedToday ? 1 : 0;
+    for (let i = windowStart; i < ROLLING_WINDOW_DAYS; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
       date.setHours(hour, minute, 0, 0);
@@ -165,6 +205,53 @@ export async function refreshDailyReminders(
     }
   } catch (e) {
     console.error('[notifications] refreshDailyReminders threw:', e);
+  }
+}
+
+/** Recompute today's coached notification from the latest data and reschedule
+ * it. Much cheaper than `refreshDailyReminders` (which rebuilds the whole
+ * rolling window) — call this when workout/measurement data changes so an
+ * already-scheduled notification never stays stale. No-ops when nothing is
+ * worth interrupting or the slot has already fired today. */
+export async function refreshTodayCoachedNotification(
+  startIso: string,
+  reminderTime: string = '18:00',
+): Promise<void> {
+  try {
+    const [sessionLogs, setLogs, measurements, equipment] = await Promise.all([
+      getAllSessionLogs(),
+      getAllSetLogs(),
+      getAllMeasurements(),
+      getEquipmentProfile(),
+    ]);
+    const coached = buildDailyNotifications(sessionLogs, setLogs, measurements, {
+      startIso,
+      asOf: new Date(),
+      reminderTime,
+      availableWeights: equipment.dumbbells,
+    });
+    const scheduledFor = coached.length > 0 ? new Date(coached[0].scheduledFor).getTime() : 0;
+    const useCoached = coached.length > 0 && scheduledFor > Date.now();
+
+    await LocalNotifications.cancel({ notifications: [{ id: COACHED_ID_BASE + 1 }] }).catch(() => {});
+    if (!useCoached) return;
+
+    const n = coached[0];
+    await LocalNotifications.schedule({
+      notifications: [
+        {
+          id: COACHED_ID_BASE + 1,
+          title: n.title,
+          body: n.body,
+          schedule: { at: new Date(n.scheduledFor) },
+          channelId: CHANNEL_ID,
+          smallIcon: SMALL_ICON,
+          iconColor: ICON_COLOR,
+        },
+      ],
+    });
+  } catch (e) {
+    console.error('[notifications] refreshTodayCoachedNotification threw:', e);
   }
 }
 

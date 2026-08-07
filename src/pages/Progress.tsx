@@ -1,20 +1,27 @@
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { ProgressOverview } from '@/pages/progress/Overview';
 import { ProgressMeasurements } from '@/pages/progress/Measurements';
 import { ProgressPhotos } from '@/pages/progress/Photos';
+import { ProgressInsights } from '@/pages/progress/Insights';
 
-type Tab = 'overview' | 'measurements' | 'photos';
+type Tab = 'overview' | 'insights' | 'measurements' | 'photos';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
+  { key: 'insights', label: 'Insights' },
   { key: 'measurements', label: 'Measurements' },
   { key: 'photos', label: 'Photos' },
 ];
 
 export function Progress() {
-  const [tab, setTab] = useState<Tab>('overview');
+  const location = useLocation();
+  const [tab, setTab] = useState<Tab>(() => {
+    const requested = (location.state as { tab?: string } | null)?.tab;
+    return requested === 'insights' ? 'insights' : 'overview';
+  });
 
   return (
     <div className="safe-top min-h-screen px-5 pb-28 pt-8 text-white">
@@ -54,6 +61,7 @@ export function Progress() {
         className="mt-5"
       >
         {tab === 'overview' && <ProgressOverview />}
+        {tab === 'insights' && <ProgressInsights />}
         {tab === 'measurements' && <ProgressMeasurements />}
         {tab === 'photos' && <ProgressPhotos />}
       </motion.div>

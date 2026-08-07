@@ -1,7 +1,13 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { getProgramStartDate, getAllSessionLogs } from "@/lib/db";
+import {
+  getProgramStartDate,
+  getAllSessionLogs,
+  getAllSetLogs,
+  getAllMeasurements,
+} from "@/lib/db";
+import { onDataChanged } from "@/lib/events";
 import {
   getTodayInfo,
   todayIso,
@@ -10,27 +16,29 @@ import {
 } from "@/lib/programEngine";
 import { program, getExercisesForSession, getTotalWorkouts } from "@/lib/data";
 import {
-  computeWeeklyStats,
-  computeCurrentStreak,
-  computeOverallStats,
-  computeProgramCompletionPct,
-} from "@/lib/analytics";
-import { tipOfTheDay } from "@/lib/tips";
+  buildRecommendations,
+  findNextSessionForExercise,
+  computeRecoveryScore,
+  type Recommendation,
+  type RecoveryAnalysis,
+} from "@/services/index";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { StatCard } from "@/components/ui/StatCard";
 import { Onboarding } from "@/pages/Onboarding";
 import { useSettings } from "@/lib/SettingsContext";
-import { formatDuration } from "@/lib/utils";
+import { RECOVERY_LEVEL_META, CONFIDENCE_META } from "@/lib/presentation";
+import { formatDuration, cn } from "@/lib/utils";
+import { getEquipmentProfile } from "@/lib/equipment";
 import { WeeklyTimeline } from "@/components/WeeklyTimeline";
 import type { SessionLog } from "@/lib/db";
 import {
-  Flame,
-  Lightbulb,
   PartyPopper,
   Moon,
   ArrowRight,
-  Trophy,
+  Sparkles,
+  HeartPulse,
+  Target,
+  CheckCircle2,
 } from "lucide-react";
 
 function estimateMinutes(sessionKey: string): number {
@@ -61,35 +69,6 @@ function formattedDate(): string {
   });
 }
 
-function useCountUp(target: number, duration = 700): number {
-  const [count, setCount] = useState(0);
-  const raf = useRef<number>(0);
-
-  useEffect(() => {
-    if (target === 0) { setCount(0); return; }
-    const startTime = performance.now();
-    function tick(now: number) {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(target * eased));
-      if (progress < 1) raf.current = requestAnimationFrame(tick);
-    }
-    raf.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf.current);
-  }, [target, duration]);
-
-  return count;
-}
-
-interface DashboardStats {
-  consistencyPct: number;
-  streak: number;
-  totalCompleted: number;
-  programPct: number;
-  hasAnyData: boolean;
-}
-
 function Skeleton() {
   return (
     <div className="safe-top min-h-screen px-5 pb-28 pt-8">
@@ -98,18 +77,17 @@ function Skeleton() {
         <div className="h-3 w-48 animate-pulse rounded bg-white/5" />
       </div>
       <div className="mt-6 h-56 animate-pulse rounded-2xl bg-white/8" />
-      <div className="mt-6 space-y-2">
-        <div className="h-3 w-40 animate-pulse rounded bg-white/10" />
-        <div className="h-2.5 w-full animate-pulse rounded-full bg-white/8" />
-      </div>
-      <div className="mt-5 grid grid-cols-2 gap-2.5">
-        <div className="h-16 animate-pulse rounded-xl bg-white/8" />
-        <div className="h-16 animate-pulse rounded-xl bg-white/8" />
-        <div className="h-16 animate-pulse rounded-xl bg-white/8" />
-        <div className="h-16 animate-pulse rounded-xl bg-white/8" />
-      </div>
+      <div className="mt-5 h-32 animate-pulse rounded-2xl bg-white/8" />
+      <div className="mt-4 h-24 animate-pulse rounded-2xl bg-white/8" />
     </div>
   );
+}
+
+interface CoachData {
+  top: Recommendation | null;
+  recovery: RecoveryAnalysis;
+  focus: string;
+  hasAnyData: boolean;
 }
 
 export function Home() {
@@ -118,8 +96,8 @@ export function Home() {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState<string | null>(null);
   const [today, setToday] = useState<TodayInfo | null>(null);
-  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [sessionLogs, setSessionLogs] = useState<SessionLog[]>([]);
+  const [coach, setCoach] = useState<CoachData | null>(null);
 
   const load = useCallback(async () => {
     const d = await getProgramStartDate();
@@ -127,19 +105,31 @@ export function Home() {
     if (d) {
       const info = getTodayInfo(d);
       setToday(info);
-      const sessionLogs = await getAllSessionLogs();
-      setSessionLogs(sessionLogs);
-      const weekly = computeWeeklyStats(sessionLogs, []);
-      const thisWeek = weekly.find((w) => w.week === info.weekNumber);
-      const overall = computeOverallStats(sessionLogs, []);
-      const s = {
-        consistencyPct: thisWeek?.consistencyPct ?? 0,
-        streak: computeCurrentStreak(sessionLogs, d),
-        totalCompleted: overall.totalSessionsCompleted,
-        programPct: computeProgramCompletionPct(overall.totalSessionsCompleted),
-        hasAnyData: overall.totalSessionsCompleted > 0,
-      };
-      setStats(s);
+      const [logs, sets, meas, eq] = await Promise.all([
+        getAllSessionLogs(),
+        getAllSetLogs(),
+        getAllMeasurements(),
+        getEquipmentProfile(),
+      ]);
+      setSessionLogs(logs);
+
+      const asOf = new Date();
+      const recommendations = buildRecommendations(logs, sets, meas, {
+        startIso: d,
+        asOf,
+        availableWeights: eq.dumbbells,
+      });
+      const top =
+        recommendations.find(
+          (r) => r.importance === "critical" || r.importance === "high",
+        ) ?? null;
+
+      setCoach({
+        top,
+        recovery: computeRecoveryScore(logs, sets, { startIso: d, asOf }),
+        focus: info.weekRow?.focus ?? "",
+        hasAnyData: logs.some((s) => s.completed),
+      });
     }
     setLoading(false);
     refreshNav();
@@ -147,14 +137,13 @@ export function Home() {
 
   useEffect(() => { load(); }, [load]);
 
-  const animatedConsistency = useCountUp(stats?.consistencyPct ?? 0);
-  const animatedStreak = useCountUp(stats?.streak ?? 0);
-  const animatedTotal = useCountUp(stats?.totalCompleted ?? 0);
-  const animatedProgram = useCountUp(stats?.programPct ?? 0);
+  // Recompute coaching data whenever any data mutation is committed — this is
+  // the event-driven guarantee that Home always reflects the latest state.
+  useEffect(() => onDataChanged(load), [load]);
 
   if (loading) return <Skeleton />;
   if (!startDate) return <Onboarding onDone={load} />;
-  if (!today || !stats) return null;
+  if (!today || !coach) return null;
 
   const {
     weekNumber,
@@ -172,6 +161,29 @@ export function Home() {
   );
   const isTodayComplete = !!todayLog && !isRestDay && !isProgramComplete;
   const nextWorkout = (isRestDay || isTodayComplete) ? getNextWorkoutLabel(dayIndex) : null;
+
+  const { top, recovery, focus, hasAnyData } = coach;
+
+  const applyAction =
+    top?.action.type === "overload"
+      ? {
+          exerciseId: top.action.exerciseId,
+          step: top.action.step,
+          session: findNextSessionForExercise(top.action.exerciseId, dayIndex),
+        }
+      : null;
+
+  function applyRecommendation() {
+    if (!applyAction || !applyAction.session) return;
+    navigate(`/workout/${applyAction.session.sessionKey}`, {
+      state: {
+        applyRecommendation: {
+          exerciseId: applyAction.exerciseId,
+          step: applyAction.step,
+        },
+      },
+    });
+  }
 
   return (
     <div className="safe-top min-h-screen px-5 pb-28 pt-6">
@@ -210,9 +222,7 @@ export function Home() {
         >
           <Card className="mt-5 border-emerald-500/20 bg-gradient-to-br from-emerald-500/8 to-transparent">
             <div className="flex items-center gap-2">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-emerald-400">
-                <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <CheckCircle2 size={20} className="text-emerald-400" />
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-emerald-400">
                 Today&apos;s Workout
               </p>
@@ -302,6 +312,150 @@ export function Home() {
         </motion.div>
       )}
 
+      {!isProgramComplete && hasAnyData && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+        >
+          {/* What's Next Today — the single highest-value recommendation */}
+          <Card className="mt-5 border-blue-500/20 bg-gradient-to-br from-blue-500/10 to-transparent">
+            <div className="flex items-center gap-2">
+              <Sparkles size={16} className="text-blue-400" />
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-blue-400">
+                What&apos;s Next Today
+              </p>
+            </div>
+            {top ? (
+              <>
+                <h2 className="mt-2 text-xl font-extrabold text-white">
+                  {top.title}
+                </h2>
+                <p className="mt-1.5 text-sm font-medium text-slate-200">
+                  {top.decision}
+                </p>
+                <div className="mt-3 rounded-xl bg-white/[0.04] px-3.5 py-3">
+                  <p className="text-xs leading-relaxed text-slate-400">
+                    {top.reasoning.join(" ")}
+                  </p>
+                </div>
+                <div className="mt-3.5 flex items-center justify-between gap-3">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                      CONFIDENCE_META[top.confidence].chip,
+                    )}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${CONFIDENCE_META[top.confidence].color}`} />
+                    {CONFIDENCE_META[top.confidence].label} confidence
+                  </span>
+                  {applyAction && applyAction.session && (
+                    <Button
+                      size="md"
+                      className="w-auto px-4 py-2.5 text-xs"
+                      onClick={applyRecommendation}
+                    >
+                      Apply Recommendation
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="mt-2 text-xl font-extrabold text-white">
+                  All Clear
+                </h2>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-400">
+                  Nothing needs your attention today — keep following your plan
+                  and show up for your training.
+                </p>
+              </>
+            )}
+            <button
+              onClick={() => navigate("/progress", { state: { tab: "insights" } })}
+              className="mt-3.5 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500 transition-colors hover:text-slate-300"
+            >
+              View all insights
+              <ArrowRight size={12} />
+            </button>
+          </Card>
+
+          {/* Recovery — coach hierarchy: level + score, then what to do, then why */}
+          <Card className="mt-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <HeartPulse size={16} className={RECOVERY_LEVEL_META[recovery.level].color} />
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+                  Recovery
+                </p>
+              </div>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                  CONFIDENCE_META[recovery.confidence].chip,
+                )}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${CONFIDENCE_META[recovery.confidence].color}`} />
+                {CONFIDENCE_META[recovery.confidence].label} confidence
+              </span>
+            </div>
+            <p
+              className={`mt-2.5 text-2xl font-extrabold tabular-nums leading-none ${RECOVERY_LEVEL_META[recovery.level].color}`}
+            >
+              {RECOVERY_LEVEL_META[recovery.level].label}{" "}
+              <span className="font-semibold">&middot;</span> {recovery.score}
+              <span className="text-sm font-semibold text-slate-500">/100</span>
+            </p>
+            {hasAnyData &&
+              sessionLogs.some((l) => l.date === todayIso() && l.completed) && (
+                <p className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-400">
+                  Reflects today&apos;s completed session
+                </p>
+              )}
+            <p className="mt-2.5 text-sm font-semibold text-slate-200">
+              {recovery.recommendation}
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-slate-500">
+              {recovery.explanation}
+            </p>
+          </Card>
+
+          {/* Weekly Focus — evolves with the program's week table */}
+          <Card className="mt-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <Target size={16} className="text-orange-400" />
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+                  Weekly Focus
+                </p>
+              </div>
+              <span className="rounded-full bg-orange-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-orange-400">
+                Week {weekNumber} &middot;{" "}
+                {weekRow?.deload ? "Deload" : (weekRow?.phase ?? "Training")}
+              </span>
+            </div>
+            <p className="mt-2 text-sm font-semibold text-slate-200">{focus}</p>
+          </Card>
+        </motion.div>
+      )}
+
+      {!isProgramComplete && !hasAnyData && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.1 }}
+        >
+          <Card className="mt-5 flex items-center gap-3 bg-white/[0.03]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center self-center rounded-full bg-blue-600/15">
+              <Target size={18} className="text-blue-400" />
+            </div>
+            <p className="text-sm leading-snug text-slate-400">
+              Complete your first workout to begin your journey.
+            </p>
+          </Card>
+        </motion.div>
+      )}
+
       <div className="mt-5">
         <WeeklyTimeline
           startDate={startDate}
@@ -330,66 +484,11 @@ export function Home() {
         <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-white/10">
           <div
             className="h-full rounded-full bg-gradient-to-r from-blue-500 to-orange-500 transition-all duration-1000 ease-out"
-            style={{ width: `${stats.programPct}%` }}
+            style={{ width: `${Math.round((sessionLogs.filter((s) => s.completed).length / getTotalWorkouts()) * 100)}%` }}
           />
         </div>
         <p className="mt-1.5 text-xs text-slate-500">
-          {stats.totalCompleted} / {getTotalWorkouts()} workouts completed
-        </p>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.15 }}
-        className="mt-5"
-      >
-        {stats.hasAnyData ? (
-          <div className="grid grid-cols-2 gap-2.5">
-            <StatCard
-              label="This Week"
-              value={`${animatedConsistency}%`}
-              delay={0.05}
-            />
-            <StatCard
-              label="Streak"
-              value={`${animatedStreak} ${stats.streak === 1 ? "day" : "days"}`}
-              icon={stats.streak > 0 ? <Flame size={14} className="text-orange-400" /> : undefined}
-              accent={stats.streak > 0}
-              delay={0.1}
-            />
-            <StatCard
-              label="Total Workouts"
-              value={String(animatedTotal)}
-              delay={0.15}
-            />
-            <StatCard
-              label="Program"
-              value={`${animatedProgram}%`}
-              delay={0.2}
-            />
-          </div>
-        ) : (
-          <Card className="flex items-center gap-3 bg-white/[0.03]">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600/15 self-center">
-              <Trophy size={18} className="text-blue-400" />
-            </div>
-            <p className="text-sm leading-snug text-slate-400">
-              Complete your first workout to begin your journey.
-            </p>
-          </Card>
-        )}
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.25 }}
-        className="mt-4 flex items-start gap-2.5 rounded-xl bg-white/[0.02] px-3.5 py-2.5"
-      >
-        <Lightbulb size={12} className="mt-0.5 shrink-0 text-yellow-500/50" />
-        <p className="text-xs leading-relaxed text-slate-500">
-          {tipOfTheDay()}
+          {sessionLogs.filter((s) => s.completed).length} / {getTotalWorkouts()} workouts completed
         </p>
       </motion.div>
     </div>

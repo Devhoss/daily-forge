@@ -1,6 +1,12 @@
 import type { SessionLog, SetLog } from '@/lib/db';
 import { program } from '@/lib/data';
-import { computeCurrentStreak } from '@/lib/analytics';
+import { getTodayInfo } from '@/lib/programEngine';
+import {
+  computeCurrentStreak,
+  computeLongestStreak,
+  isoOf,
+  latestCompletedDate,
+} from '@/services/streaks/streakEngine';
 
 /* ---------- types ---------- */
 
@@ -211,18 +217,31 @@ function computeUnlockDate(
 function findStreakUnlockDate(
   def: MilestoneDef,
   completed: SessionLog[],
-  _data: MilestoneData,
+  data: MilestoneData,
 ): string | null {
   const target = parseInt(def.id.replace('streak-', ''), 10);
-  const dates = [...new Set(completed.map((s) => s.date))].sort();
+  const completedDates = new Set(completed.map((s) => s.date));
+  if (completedDates.size === 0) return null;
+
+  const startIso = data.startDate;
+  const [sy, sm, sd] = startIso.split('-').map(Number);
+  const cursor = new Date(sy, sm - 1, sd);
+  const maxDate = [...completedDates].sort().at(-1) as string;
+  const [ey, em, ed] = maxDate.split('-').map(Number);
+  const end = new Date(ey, em - 1, ed);
+
   let run = 0;
-  for (let i = 0; i < dates.length; i++) {
-    if (i === 0) { run = 1; continue; }
-    const prev = new Date(dates[i - 1] + 'T00:00:00');
-    const curr = new Date(dates[i] + 'T00:00:00');
-    const diff = (curr.getTime() - prev.getTime()) / 86400000;
-    run = diff === 1 ? run + 1 : 1;
-    if (run >= target) return dates[i];
+  while (cursor <= end) {
+    const info = getTodayInfo(startIso, cursor);
+    if (!info.isRestDay) {
+      if (completedDates.has(isoOf(cursor))) {
+        run++;
+        if (run >= target) return isoOf(cursor);
+      } else {
+        run = 0;
+      }
+    }
+    cursor.setDate(cursor.getDate() + 1);
   }
   return null;
 }
@@ -260,6 +279,7 @@ export function gatherMilestoneData(
   sessionLogs: SessionLog[],
   allSetLogs: SetLog[],
   startDate: string,
+  asOf?: Date,
 ): MilestoneData {
   const completed = sessionLogs.filter((s) => s.completed);
   const sessionsPerWeek: Record<number, number> = {};
@@ -267,22 +287,16 @@ export function gatherMilestoneData(
     sessionsPerWeek[s.weekNumber] = (sessionsPerWeek[s.weekNumber] ?? 0) + 1;
   }
   const totalTrainingDays = getTrainingDaysPerWeek();
-  const currentStreak = computeCurrentStreak(sessionLogs, startDate);
+  const latest = latestCompletedDate(sessionLogs);
+  const currentStreak = asOf
+    ? computeCurrentStreak(sessionLogs, startDate, asOf)
+    : latest
+      ? computeCurrentStreak(sessionLogs, startDate, new Date(latest + 'T00:00:00'))
+      : 0;
   const lifetimeReps = allSetLogs.reduce((s, l) => s + (l.repsCompleted ?? l.holdDurationSeconds ?? 0), 0);
   const totalProgramWeeks = program.week_table.length;
 
-  const allDates = [...new Set(completed.map((s) => s.date))].sort();
-  let longestStreak = 0;
-  let run = 0;
-  for (let i = 0; i < allDates.length; i++) {
-    if (i === 0) { run = 1; continue; }
-    const prev = new Date(allDates[i - 1] + 'T00:00:00');
-    const curr = new Date(allDates[i] + 'T00:00:00');
-    const diff = (curr.getTime() - prev.getTime()) / 86400000;
-    run = diff === 1 ? run + 1 : 1;
-    if (run > longestStreak) longestStreak = run;
-  }
-  if (allDates.length > 0 && longestStreak === 0) longestStreak = 1;
+  const longestStreak = computeLongestStreak(sessionLogs, startDate);
 
   const completedWeeks = Object.keys(sessionsPerWeek).map(Number).sort((a, b) => a - b);
   const programComplete = completedWeeks.length >= totalProgramWeeks
@@ -315,6 +329,32 @@ export interface MilestoneWithState {
   unlockDate: string | null;
   progressCurrent: number;
   progressTarget: number;
+}
+
+export interface MilestoneProgress {
+  id: string;
+  title: string;
+  category: MilestoneCategory;
+  progressCurrent: number;
+  progressTarget: number;
+}
+
+/**
+ * Pure progress toward every milestone — no unlock-date computation and no
+ * localStorage access. Safe for deterministic services (recommendations,
+ * weekly report) that must not have side effects.
+ */
+export function getMilestoneProgress(data: MilestoneData): MilestoneProgress[] {
+  return ALL_MILESTONES.map((def) => {
+    const progress = computeProgress(def, data);
+    return {
+      id: def.id,
+      title: def.title,
+      category: def.category,
+      progressCurrent: progress.current,
+      progressTarget: progress.target,
+    };
+  });
 }
 
 export function computeMilestoneStates(data: MilestoneData): MilestoneWithState[] {

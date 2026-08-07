@@ -1,6 +1,5 @@
 import type { SessionLog, SetLog } from "@/lib/db";
 import { program } from "@/lib/data";
-import { getTodayInfo } from "@/lib/programEngine";
 
 export interface WeeklyStat {
   week: number;
@@ -100,57 +99,6 @@ function average(values: number[]): number | null {
   return (
     Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10
   );
-}
-
-/** Counts consecutive training days completed working backwards from today
- * (or yesterday, if today hasn't been trained yet). Rest days never break
- * the streak — they're just skipped over. Stops at the first training day
- * with no completed session log. */
-export function computeCurrentStreak(
-  sessionLogs: SessionLog[],
-  startIso: string,
-  today: Date = new Date(),
-): number {
-  const completedDates = new Set(
-    sessionLogs.filter((s) => s.completed).map((s) => s.date),
-  );
-
-  let streak = 0;
-  const cursor = new Date(today);
-
-  // If today is a training day but not yet logged, start checking from
-  // yesterday instead so an in-progress day doesn't reset the streak to 0.
-  const todayInfo = getTodayInfo(startIso, cursor);
-  const todayIsoStr = isoOf(cursor);
-  if (!todayInfo.isRestDay && !completedDates.has(todayIsoStr)) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  for (let i = 0; i < 365; i++) {
-    const info = getTodayInfo(startIso, cursor);
-    if (info.daysSinceStart < 0) break;
-    const dateStr = isoOf(cursor);
-
-    if (info.isRestDay) {
-      cursor.setDate(cursor.getDate() - 1);
-      continue;
-    }
-    if (completedDates.has(dateStr)) {
-      streak++;
-      cursor.setDate(cursor.getDate() - 1);
-    } else {
-      break;
-    }
-  }
-
-  return streak;
-}
-
-function isoOf(d: Date): string {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
 }
 
 /** Only returns weeks that actually have at least one logged session —

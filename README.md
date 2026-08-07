@@ -166,7 +166,6 @@ src/
 │   ├── data.ts           # re-exports exercises + program from JSON
 │   ├── db.ts             # Dexie IndexedDB schema — sessionLogs, setLogs, measurements, photos
 │   ├── equipment.ts      # equipment lookup and grouping helpers
-│   ├── intelligence.ts   # exercise intelligence / contextual tips
 │   ├── milestones.ts     # centralized milestone engine (definitions, unlock logic, persistence)
 │   ├── notifications.ts  # daily reminder scheduling with refresh
 │   ├── programEngine.ts  # pure fn mapping days-since-start → week, phase, today's session

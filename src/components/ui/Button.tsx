@@ -10,7 +10,7 @@ export function Button({ variant = 'primary', size = 'md', className, ...props }
   return (
     <button
       className={cn(
-        'w-full rounded-xl font-semibold transition-transform active:scale-[0.97] disabled:opacity-40',
+        'inline-flex w-full items-center justify-center gap-2 rounded-xl font-semibold transition-transform active:scale-[0.97] disabled:opacity-40',
         size === 'md' && 'py-3 text-sm',
         size === 'lg' && 'py-3.5 text-base',
         variant === 'primary' && 'bg-blue-600 text-white hover:bg-blue-500',

@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Dumbbell, Target, Zap, Trophy, Clock, TrendingUp, Calendar, Lock, CheckCircle } from 'lucide-react';
 import { getAllSessionLogs, getAllSetLogs, getProgramStartDate } from '@/lib/db';
-import { computeWeeklyStats, trimToLoggedWeeks, computeCurrentStreak, computeOverallStats, computeProgramCompletionPct, type WeeklyStat } from '@/lib/analytics';
+import { computeWeeklyStats, trimToLoggedWeeks, computeOverallStats, computeProgramCompletionPct, type WeeklyStat } from '@/lib/analytics';
+import { computeCurrentStreak, computeLongestStreak } from '@/services/streaks/streakEngine';
+import { computeExerciseRecords } from '@/lib/prs';
 import { getExercise } from '@/lib/data';
 import { Card } from '@/components/ui/Card';
+import { Skeleton } from '@/components/ui/Skeleton';
+import { onDataChanged } from '@/lib/events';
 import { formatDuration } from '@/lib/utils';
 import { gatherMilestoneData, computeMilestoneStates, getMilestonesByCategory, type MilestoneWithState } from '@/lib/milestones';
 import type { SessionLog, SetLog } from '@/lib/db';
@@ -264,6 +268,62 @@ function PRCard({ prs }: { prs: PRs }) {
   );
 }
 
+/* ---------- Exercise Records ---------- */
+
+function ExerciseRecordsCard({ setLogs }: { setLogs: SetLog[] }) {
+  const records = useMemo(() => computeExerciseRecords(setLogs), [setLogs]);
+  const rows = useMemo(() => {
+    return Array.from(records.values())
+      .filter(
+        (r) =>
+          r.bestReps != null || r.bestWeightKg != null || r.bestHoldSeconds != null,
+      )
+      .map((r) => {
+        const ex = getExercise(r.exerciseId);
+        const name = ex?.name ?? r.exerciseId;
+        let line: string;
+        if (r.bestHoldSeconds != null && r.bestReps == null) {
+          line = `${r.bestHoldSeconds}s hold`;
+        } else if (r.bestWeightKg != null) {
+          line = `${r.bestReps} reps @ ${r.bestWeightKg}kg`;
+        } else {
+          line = `${r.bestReps} reps`;
+        }
+        return {
+          name,
+          line,
+          score: r.bestVolume ?? r.bestHoldSeconds ?? r.bestReps ?? 0,
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6);
+  }, [records]);
+
+  if (rows.length === 0) return null;
+
+  return (
+    <Card>
+      <div className="flex items-center gap-2">
+        <Dumbbell size={16} className="text-blue-400" />
+        <h3 className="text-sm font-bold text-white">Exercise Records</h3>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {rows.map((row) => (
+          <li
+            key={row.name}
+            className="flex items-center justify-between gap-2 rounded-lg bg-white/[0.03] px-3 py-2"
+          >
+            <span className="truncate text-xs font-semibold text-white">{row.name}</span>
+            <span className="shrink-0 text-xs font-medium tabular-nums text-slate-400">
+              {row.line}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </Card>
+  );
+}
+
 /* ---------- Milestones ---------- */
 
 function formatDate(iso: string): string {
@@ -340,37 +400,27 @@ export function ProgressOverview() {
   const [allSetLogs, setAllSetLogs] = useState<SetLog[]>([]);
   const [startDate, setStartDate] = useState<string | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      const [sl, sets, sd] = await Promise.all([getAllSessionLogs(), getAllSetLogs(), getProgramStartDate()]);
-      setSessionLogs(sl);
-      setAllSetLogs(sets);
-      setStartDate(sd);
-      setStats(trimToLoggedWeeks(computeWeeklyStats(sl, sets)));
-    })();
+  const load = useCallback(async () => {
+    const [sl, sets, sd] = await Promise.all([getAllSessionLogs(), getAllSetLogs(), getProgramStartDate()]);
+    setSessionLogs(sl);
+    setAllSetLogs(sets);
+    setStartDate(sd);
+    setStats(trimToLoggedWeeks(computeWeeklyStats(sl, sets)));
   }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Recompute whenever any data mutation is committed.
+  useEffect(() => onDataChanged(load), [load]);
 
   const completedDates = useMemo(() => new Set(sessionLogs.filter((s) => s.completed).map((s) => s.date)), [sessionLogs]);
   const totalReps = useMemo(() => allSetLogs.reduce((s, l) => s + (l.repsCompleted ?? l.holdDurationSeconds ?? 0), 0), [allSetLogs]);
   const streaks = useMemo(() => {
     if (!startDate) return { current: 0, longest: 0 };
-    const s = computeCurrentStreak(sessionLogs, startDate);
-    const completed = sessionLogs.filter((l) => l.completed);
-    let longest = 0;
-    let run = 0;
-    let prevDate: string | null = null;
-    const sorted = [...new Set(completed.map((l) => l.date))].sort();
-    for (const d of sorted) {
-      if (prevDate) {
-        const prev = new Date(prevDate + 'T00:00:00');
-        const curr = new Date(d + 'T00:00:00');
-        const diff = (curr.getTime() - prev.getTime()) / 86400000;
-        if (diff === 1) { run++; } else { run = 1; }
-      } else { run = 1; }
-      if (run > longest) longest = run;
-      prevDate = d;
-    }
-    return { current: s, longest };
+    return {
+      current: computeCurrentStreak(sessionLogs, startDate, new Date()),
+      longest: computeLongestStreak(sessionLogs, startDate),
+    };
   }, [sessionLogs, startDate]);
 
   const overall = useMemo(() => computeOverallStats(sessionLogs, allSetLogs), [sessionLogs, allSetLogs]);
@@ -383,7 +433,19 @@ export function ProgressOverview() {
     return computeMilestoneStates(data);
   }, [sessionLogs, allSetLogs, startDate]);
 
-  if (!stats) return null;
+  if (!stats) {
+    return (
+      <div className="space-y-5" aria-busy="true">
+        <div className="grid grid-cols-2 gap-2.5">
+          <Skeleton className="h-20" />
+          <Skeleton className="h-20" />
+        </div>
+        <Skeleton className="h-36" />
+        <Skeleton className="h-24" />
+        <Skeleton className="h-24" />
+      </div>
+    );
+  }
   const hasAnyData = stats.some((s) => s.sessionsCompleted > 0);
 
   if (!hasAnyData) {
@@ -451,6 +513,17 @@ export function ProgressOverview() {
       >
         <PRCard prs={prs} />
       </motion.div>
+
+      {/* Exercise Records */}
+      {allSetLogs.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.2 }}
+        >
+          <ExerciseRecordsCard setLogs={allSetLogs} />
+        </motion.div>
+      )}
 
       {/* Milestones */}
       {milestoneStates.length > 0 && (

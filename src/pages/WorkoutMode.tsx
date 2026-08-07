@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { App } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { getExercisesForSession, resolveIllustrationSrc, isPortraitExercise, isTimeBasedExercise, parseHoldDuration, program } from '@/lib/data';
-import { db, upsertSessionLog, getProgramStartDate, getAllSetLogs, getAllSessionLogs } from '@/lib/db';
-import { computeCurrentStreak } from '@/lib/analytics';
+import { upsertSessionLog, addSetLog, getProgramStartDate, getAllSetLogs, getAllSessionLogs } from '@/lib/db';
+import { computeCurrentStreak } from '@/services/streaks/streakEngine';
 import { getTodayInfo, todayIso } from '@/lib/programEngine';
 import { Button } from '@/components/ui/Button';
 import { Chip } from '@/components/ui/Chip';
@@ -13,11 +13,19 @@ import { RestTimer, parseRestSeconds, ensureRestAudio } from '@/components/RestT
 import { CoachBar, CoachSheet } from '@/components/ExerciseCoach';
 import { startWorkoutNotification, updateExerciseNotification, updateRestNotification, stopWorkoutNotification } from '@/lib/workoutNotification';
 import { saveWorkoutState, loadWorkoutState, clearWorkoutState } from '@/lib/workoutState';
-import { Flame, ChevronLeft, X, ChevronDown } from 'lucide-react';
+import { getEquipmentProfile } from '@/lib/equipment';
+import { recommendWeight } from '@/lib/weights';
+import type { OverloadStep } from '@/services/recommendations/recommendationEngine';
+import { Flame, ChevronLeft, X, ChevronDown, Sparkles } from 'lucide-react';
 import { cn, formatDuration } from '@/lib/utils';
 import type { Exercise } from '@/types';
 
 const REST_NOTIFICATION_ID = 8888;
+
+interface ApplyRecommendation {
+  exerciseId: string;
+  step: OverloadStep;
+}
 
 function parseTargetSets(setsField: string): number {
   const numbers = setsField.match(/\d+/g);
@@ -94,6 +102,11 @@ function HoldTimer({
 export function WorkoutMode() {
   const { sessionKey } = useParams<{ sessionKey: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const appliedRecRef = useRef<ApplyRecommendation | null>(
+    (location.state as { applyRecommendation?: ApplyRecommendation } | null)
+      ?.applyRecommendation ?? null,
+  );
   const exercises = useMemo(
     () => (sessionKey ? getExercisesForSession(sessionKey) : []),
     [sessionKey]
@@ -111,6 +124,8 @@ export function WorkoutMode() {
   const [restOverrideSeconds, setRestOverrideSeconds] = useState<number | null>(null);
   const [holdInitElapsed, setHoldInitElapsed] = useState(0);
   const startedAtRef = useRef<number>(Date.now());
+  const [weightUsed, setWeightUsed] = useState<number | null>(null);
+  const [weightOptions, setWeightOptions] = useState<number[]>([]);
 
   /* Persistent workout notification */
   useEffect(() => {
@@ -185,6 +200,7 @@ export function WorkoutMode() {
       const saved = await loadWorkoutState();
       if (saved && saved.sessionKey === sessionKey) {
         if (saved.startedAt) startedAtRef.current = saved.startedAt;
+        if (saved.weightUsed != null) setWeightUsed(saved.weightUsed);
         setExerciseIndex(saved.exerciseIndex);
         setSetIndex(saved.setIndex);
         if (saved.repsInput > 0) setRepsInput(saved.repsInput);
@@ -215,7 +231,46 @@ export function WorkoutMode() {
     }
   }, [exerciseIndex, exercisesList]);
 
+  // Reset weight selection per exercise; default to the recommended load when owned,
+  // or to the applied recommendation's target when one was applied from Home.
+  useEffect(() => {
+    setWeightUsed(null);
+    const current = exercisesList[exerciseIndex];
+    if (!current) return;
+    const applied = appliedRecRef.current;
+    const isApplied = applied != null && applied.exerciseId === current.id;
+    const weighted =
+      current.recommendedLoads && Object.keys(current.recommendedLoads).length > 0;
+    if (!weighted) {
+      setWeightOptions([]);
+      return;
+    }
+    (async () => {
+      const profile = await getEquipmentProfile();
+      const owned = [...profile.dumbbells].sort((a, b) => a - b);
+      const rec = await recommendWeight(current);
+      const desired =
+        isApplied && applied.step.target.loadKg != null ? applied.step.target.loadKg : rec.weight;
+      let def: number | null = null;
+      if (desired > 0) {
+        const exact = owned.find((w) => Math.abs(w - desired) < 1e-9);
+        if (exact) {
+          def = exact;
+        } else if (owned.length) {
+          def = owned.reduce((best, w) =>
+            Math.abs(w - desired) < Math.abs(best - desired) ? w : best,
+          );
+        }
+      }
+      const opts = def == null || owned.includes(def) ? owned : [...owned, def].sort((a, b) => a - b);
+      setWeightOptions(opts);
+      setWeightUsed(def);
+    })();
+  }, [exerciseIndex, exercisesList]);
+
   const ex = exercises[exerciseIndex];
+  const appliedRec = appliedRecRef.current;
+  const isAppliedExercise = appliedRec != null && appliedRec.exerciseId === ex?.id;
   const targetSets = parseTargetSets(ex.sets);
   const isLastSetOfExercise = setIndex >= targetSets - 1;
   const isLastExercise = exerciseIndex >= exercises.length - 1;
@@ -250,12 +305,13 @@ export function WorkoutMode() {
 
   async function logSet() {
     ensureRestAudio();
-    await db.setLogs.add({
+    await addSetLog({
       date: todayIso(),
       sessionKey: sessionKey!,
       exerciseId: ex.id,
       setIndex,
       repsCompleted: repsInput,
+      weightUsed: weightUsed ?? undefined,
       completedAt: new Date().toISOString(),
     });
     restEndRef.current = Date.now() + parseRestSeconds(ex.rest) * 1000;
@@ -270,19 +326,21 @@ export function WorkoutMode() {
       restEndTime: restEndRef.current,
       restDuration: parseRestSeconds(ex.rest),
       startedAt: startedAtRef.current,
+      weightUsed: weightUsed ?? undefined,
       timestamp: Date.now(),
     });
   }
 
   function logHold(durationSeconds: number) {
     ensureRestAudio();
-    db.setLogs.add({
+    addSetLog({
       date: todayIso(),
       sessionKey: sessionKey!,
       exerciseId: ex.id,
       setIndex,
       holdDurationSeconds: durationSeconds,
       repsCompleted: durationSeconds,
+      weightUsed: weightUsed ?? undefined,
       completedAt: new Date().toISOString(),
     });
     restEndRef.current = Date.now() + parseRestSeconds(ex.rest) * 1000;
@@ -297,6 +355,7 @@ export function WorkoutMode() {
       restEndTime: restEndRef.current,
       restDuration: parseRestSeconds(ex.rest),
       startedAt: startedAtRef.current,
+      weightUsed: weightUsed ?? undefined,
       timestamp: Date.now(),
     });
   }
@@ -325,6 +384,7 @@ export function WorkoutMode() {
           phase: 'exercise',
           repsInput,
           startedAt: startedAtRef.current,
+          weightUsed: weightUsed ?? undefined,
           timestamp: Date.now(),
         });
       }
@@ -418,6 +478,7 @@ export function WorkoutMode() {
                     restEndTime: restEndRef.current ?? undefined,
                     restDuration: parseRestSeconds(ex.rest),
                     startedAt: startedAtRef.current,
+                    weightUsed: weightUsed ?? undefined,
                     timestamp: Date.now(),
                   });
                   navigate('/');
@@ -460,6 +521,44 @@ export function WorkoutMode() {
         )}
         <Chip variant="slate">{`Tempo ${ex.tempo}`}</Chip>
       </div>
+
+      {phase === 'exercise' && weightOptions.length > 0 && (
+        <div className="mt-3">
+          <p className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">
+            Load
+          </p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {weightOptions.map((w) => (
+              <button
+                key={w}
+                onClick={() => setWeightUsed(w)}
+                className={cn(
+                  'rounded-lg border px-3 py-1.5 text-xs font-semibold transition active:scale-95',
+                  weightUsed === w
+                    ? 'border-blue-500/40 bg-blue-500/20 text-blue-400'
+                    : 'border-white/10 bg-white/5 text-slate-400',
+                )}
+              >
+                {w} kg
+              </button>
+            ))}
+          </div>
+          {isAppliedExercise && appliedRec && (
+            <div className="mt-2.5 flex items-start gap-1.5 rounded-lg bg-blue-500/10 px-3 py-2 text-[11px] leading-relaxed text-blue-300">
+              <Sparkles size={12} className="mt-0.5 shrink-0" />
+              <span>
+                Coach: aim for{" "}
+                {appliedRec.step.target.loadKg != null
+                  ? `${appliedRec.step.target.loadKg} kg`
+                  : appliedRec.step.target.holdSeconds != null
+                    ? `${appliedRec.step.target.holdSeconds}s holds`
+                    : "the top of the rep range"}{" "}
+                this session.
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {phase === 'exercise' && nextEx && (
         <div className="mt-4 flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3">
@@ -575,7 +674,7 @@ function SessionSummary({
       setTotalReps(reps);
 
       if (startDate) {
-        setStreak(computeCurrentStreak(sessionLogs, startDate));
+        setStreak(computeCurrentStreak(sessionLogs, startDate, new Date()));
         const weekSessions = sessionLogs.filter(
           (l) => l.weekNumber === weekNumber && l.completed,
         );

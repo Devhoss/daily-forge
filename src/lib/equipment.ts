@@ -1,4 +1,5 @@
 import { db } from '@/lib/db';
+import { emitDataChanged } from '@/lib/events';
 
 const STORAGE_KEY = 'equipment';
 
@@ -31,6 +32,7 @@ export async function getEquipmentProfile(): Promise<EquipmentProfile> {
 
 export async function saveEquipmentProfile(profile: EquipmentProfile): Promise<void> {
   await db.settings.put({ key: STORAGE_KEY, value: JSON.stringify(profile) });
+  emitDataChanged();
 }
 
 /**

@@ -13,7 +13,17 @@ import {
   setReminderTime as persistReminderTime,
   getSavePhotosToGallery,
   setSavePhotosToGallery as persistSavePhotosToGallery,
+  getDeveloperModeEnabled,
+  setDeveloperModeEnabled as persistDeveloperModeEnabled,
+  getVerboseLoggingEnabled,
+  setVerboseLoggingEnabled as persistVerboseLoggingEnabled,
+  getRecoveryTracingEnabled,
+  setRecoveryTracingEnabled as persistRecoveryTracingEnabled,
 } from "@/lib/db";
+import {
+  setRecoveryDebugEnabled,
+  setRecoveryTracingEnabled,
+} from "@/services/recovery/recoveryScore";
 
 interface SettingsContextValue {
   loaded: boolean;
@@ -23,6 +33,12 @@ interface SettingsContextValue {
   setReminderTime: (value: string) => Promise<void>;
   savePhotosToGallery: boolean;
   setSavePhotosToGallery: (value: boolean) => Promise<void>;
+  developerMode: boolean;
+  setDeveloperMode: (value: boolean) => Promise<void>;
+  verboseLogging: boolean;
+  setVerboseLogging: (value: boolean) => Promise<void>;
+  recoveryTracing: boolean;
+  setRecoveryTracing: (value: boolean) => Promise<void>;
   navRefreshKey: number;
   refreshNav: () => void;
 }
@@ -34,20 +50,38 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [notificationsEnabled, setNotificationsEnabledState] = useState(false);
   const [reminderTime, setReminderTimeState] = useState("18:00");
   const [savePhotosToGallery, setSavePhotosToGalleryState] = useState(true);
+  const [developerMode, setDeveloperModeState] = useState(false);
+  const [verboseLogging, setVerboseLoggingState] = useState(false);
+  const [recoveryTracing, setRecoveryTracingState] = useState(true);
   const [navRefreshKey, setNavRefreshKey] = useState(0);
 
   const refreshNav = useCallback(() => setNavRefreshKey((k) => k + 1), []);
 
   useEffect(() => {
     (async () => {
-      const [enabled, time, savePhotos] = await Promise.all([
+      const [
+        enabled,
+        time,
+        savePhotos,
+        devMode,
+        verbose,
+        tracing,
+      ] = await Promise.all([
         getNotificationsEnabled(),
         getReminderTime(),
         getSavePhotosToGallery(),
+        getDeveloperModeEnabled(),
+        getVerboseLoggingEnabled(),
+        getRecoveryTracingEnabled(),
       ]);
       setNotificationsEnabledState(enabled);
       setReminderTimeState(time);
       setSavePhotosToGalleryState(savePhotos);
+      setDeveloperModeState(devMode);
+      setVerboseLoggingState(verbose);
+      setRecoveryTracingState(tracing);
+      setRecoveryDebugEnabled(verbose);
+      setRecoveryTracingEnabled(tracing);
       setLoaded(true);
     })();
   }, []);
@@ -67,6 +101,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await persistSavePhotosToGallery(value);
   }
 
+  async function setDeveloperMode(value: boolean) {
+    setDeveloperModeState(value);
+    await persistDeveloperModeEnabled(value);
+  }
+
+  async function setVerboseLogging(value: boolean) {
+    setVerboseLoggingState(value);
+    setRecoveryDebugEnabled(value);
+    await persistVerboseLoggingEnabled(value);
+  }
+
+  async function setRecoveryTracing(value: boolean) {
+    setRecoveryTracingState(value);
+    setRecoveryTracingEnabled(value);
+    await persistRecoveryTracingEnabled(value);
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -77,6 +128,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setReminderTime,
         savePhotosToGallery,
         setSavePhotosToGallery,
+        developerMode,
+        setDeveloperMode,
+        verboseLogging,
+        setVerboseLogging,
+        recoveryTracing,
+        setRecoveryTracing,
         navRefreshKey,
         refreshNav,
       }}

@@ -78,12 +78,15 @@ export function NotificationCard() {
           </div>
           <div className="min-w-0">
             <p className="text-sm font-bold text-white">
-              Daily Training Reminder
+              Daily Coaching & Reminders
             </p>
             <p className="mt-1 text-xs leading-relaxed text-slate-400">
-              One notification on each scheduled training day, automatically
-              skipping rest days. Only fires from the installed app — not the
-              browser preview.
+              One notification each day — driven by the coaching engine, not a
+              generic alert. Today's notification carries the highest-value
+              recommendation (recovery, overload, deload…) when something
+              important is due; otherwise it stays a training-day reminder and
+              automatically skips rest days. Only fires from the installed app —
+              not the browser preview.
             </p>
           </div>
         </div>

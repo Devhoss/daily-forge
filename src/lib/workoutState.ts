@@ -14,6 +14,8 @@ export interface WorkoutState {
   restDuration?: number;
   /** Wall-clock epoch (ms) when the workout was started, for accurate elapsed duration. */
   startedAt?: number;
+  /** External load (kg) in use for the current exercise. */
+  weightUsed?: number;
   timestamp: number;
 }
 

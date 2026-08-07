@@ -6,6 +6,7 @@ import { program } from '@/lib/data';
 import type { SessionLog, SetLog } from '@/lib/db';
 import { Search, ChevronRight, Filter } from 'lucide-react';
 import { cn, formatDuration } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 type CategoryFilter = 'All' | 'Push' | 'Pull' | 'Legs' | 'Core';
 
@@ -33,12 +34,14 @@ export function History() {
   const [allSetLogs, setAllSetLogs] = useState<SetLog[]>([]);
   const [filter, setFilter] = useState<CategoryFilter>('All');
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       const [sl, sets] = await Promise.all([getAllSessionLogs(), getAllSetLogs()]);
       setSessionLogs(sl.filter((l) => l.completed).reverse());
       setAllSetLogs(sets);
+      setLoading(false);
     })();
   }, []);
 
@@ -92,6 +95,7 @@ export function History() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search workouts\u2026"
+            aria-label="Search workouts"
             className="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-9 pr-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-blue-500/40"
           />
         </div>
@@ -100,6 +104,7 @@ export function History() {
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as CategoryFilter)}
+            aria-label="Filter by category"
             className="appearance-none rounded-xl border border-white/10 bg-white/5 py-2.5 pl-9 pr-8 text-sm text-white outline-none focus:border-blue-500/40"
           >
             {CATEGORIES.map((c) => (
@@ -111,7 +116,13 @@ export function History() {
         </div>
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="mt-4 space-y-2" aria-busy="true">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+      ) : filtered.length === 0 ? (
         <p className="mt-12 text-center text-sm text-slate-500">
           {sessionLogs.length === 0
             ? 'No workouts yet. Complete your first session to see it here.'

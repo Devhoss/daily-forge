@@ -8,10 +8,13 @@ import { Book } from "@/pages/Book";
 import { Settings } from "@/pages/Settings";
 import { WorkoutReview } from "@/pages/WorkoutReview";
 import { History } from "@/pages/History";
+import { DebugPage } from "@/pages/Debug";
 import { BottomNav } from "@/components/BottomNav";
 import { SettingsProvider, useSettings } from "@/lib/SettingsContext";
+import { ToastProvider } from "@/lib/toast";
 import { getProgramStartDate } from "@/lib/db";
-import { refreshDailyReminders } from "@/lib/notifications";
+import { onDataChanged } from "@/lib/events";
+import { refreshDailyReminders, refreshTodayCoachedNotification } from "@/lib/notifications";
 
 const Progress = lazy(() =>
   import("@/pages/Progress").then((m) => ({ default: m.Progress })),
@@ -29,15 +32,31 @@ function Shell() {
 
   useEffect(() => {
     if (!loaded || !notificationsEnabled) return;
+    let timer: number | undefined;
+    // Any data mutation re-computes today's coached notification so an
+    // already-scheduled notification never stays stale (debounced to coalesce
+    // bursts such as the many set-log writes during a workout).
+    const applyDataChanged = () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(async () => {
+        const start = await getProgramStartDate();
+        if (start) await refreshTodayCoachedNotification(start, reminderTime);
+      }, 1500);
+    };
     (async () => {
       const start = await getProgramStartDate();
       if (start) await refreshDailyReminders(start, reminderTime);
     })();
+    const unsubscribe = onDataChanged(applyDataChanged);
+    return () => {
+      window.clearTimeout(timer);
+      unsubscribe();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded, notificationsEnabled, reminderTime]);
 
   const isOnboarding = location.pathname === "/" && hasStartDate === false;
-  const hideNav = location.pathname.startsWith("/workout") || location.pathname.startsWith("/review") || isOnboarding;
+  const hideNav = location.pathname.startsWith("/workout") || location.pathname.startsWith("/review") || location.pathname.startsWith("/debug") || isOnboarding;
 
   return (
     <>
@@ -58,6 +77,8 @@ function Shell() {
         <Route path="/history" element={<History />} />
         <Route path="/book" element={<Book />} />
         <Route path="/settings" element={<Settings />} />
+        {/* Hidden developer route — only reachable by typing /#/debug. */}
+        <Route path="/debug" element={<DebugPage />} />
       </Routes>
       {!hideNav && <BottomNav />}
     </>
@@ -66,11 +87,13 @@ function Shell() {
 
 function App() {
   return (
-    <SettingsProvider>
-      <HashRouter>
-        <Shell />
-      </HashRouter>
-    </SettingsProvider>
+    <ToastProvider>
+      <SettingsProvider>
+        <HashRouter>
+          <Shell />
+        </HashRouter>
+      </SettingsProvider>
+    </ToastProvider>
   );
 }
 

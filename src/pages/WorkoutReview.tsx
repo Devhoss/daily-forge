@@ -2,9 +2,10 @@ import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { getSessionLog, getAllSetLogs, getAllSessionLogs, getProgramStartDate } from "@/lib/db";
-import { getExercisesForSession, program } from "@/lib/data";
+import { getExercisesForSession, getExercise, program } from "@/lib/data";
 import { getNextWorkoutLabel, getTodayInfo } from "@/lib/programEngine";
-import { computeCurrentStreak } from "@/lib/analytics";
+import { computeCurrentStreak } from "@/services/streaks/streakEngine";
+import { detectSessionPRs, prLabel } from "@/lib/prs";
 import { gatherMilestoneData, getNewlyUnlockedMilestones } from "@/lib/milestones";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -12,7 +13,7 @@ import { formatDuration } from "@/lib/utils";
 import { humanizeEquipment } from "@/lib/equipment";
 import type { SessionLog, SetLog } from "@/lib/db";
 import type { Exercise } from "@/types";
-import { Dumbbell, Moon, ArrowRight, Clock, Zap, Target, Sparkles, TrendingUp, MessageSquare, Hexagon, Lightbulb } from "lucide-react";
+import { Dumbbell, Moon, ArrowRight, Clock, Zap, Target, Sparkles, TrendingUp, MessageSquare, Hexagon, Lightbulb, Trophy } from "lucide-react";
 
 /* ---------- helpers ---------- */
 
@@ -67,6 +68,16 @@ function computeHighlights(
   const completed = allSessionLogs.filter((s) => s.completed);
   const thisDuration = log.durationMin ?? 0;
   const thisReps = setLogs.reduce((s, l) => s + (l.repsCompleted ?? l.holdDurationSeconds ?? 0), 0);
+
+  // Exercise-level personal records set this session.
+  const prs = detectSessionPRs(allSetLogs, log.date, sessionKey).slice(0, 5);
+  for (const pr of prs) {
+    const name = getExercise(pr.exerciseId)?.name ?? pr.exerciseId;
+    highlights.push({
+      icon: <Trophy size={14} className="text-yellow-400" />,
+      text: `${name} \u2014 ${prLabel(pr.type, pr.current)}`,
+    });
+  }
 
   const longestEver = Math.max(...completed.map((s) => s.durationMin ?? 0), 0);
   if (thisDuration > 0 && thisDuration >= longestEver) {
@@ -229,7 +240,7 @@ export function WorkoutReview() {
 
   const streak = useMemo(() => {
     if (!startDate) return 0;
-    return computeCurrentStreak(allSessionLogs, startDate);
+    return computeCurrentStreak(allSessionLogs, startDate, new Date());
   }, [allSessionLogs, startDate]);
 
   const highlights = useMemo(() => {

@@ -1,4 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
+import { emitDataChanged } from '@/lib/events';
 
 export interface SettingRow {
   key: string;
@@ -28,6 +29,12 @@ export interface SetLog {
   setIndex: number;
   repsCompleted?: number;
   holdDurationSeconds?: number;
+  /** External load used (kg), recorded from schema v2 onward. Absent on legacy/bodyweight sets. */
+  weightUsed?: number;
+  /** Future-ready: the particular variation performed (e.g. "paused", "single-arm"). */
+  variationUsed?: string;
+  /** Bodyweight (kg) if the exercise was done unweighted. */
+  bodyWeight?: number;
   completedAt: string;
 }
 
@@ -67,12 +74,27 @@ class BlueprintDB extends Dexie {
 
   constructor() {
     super('home-dumbbell-blueprint');
+    // v1 — original schema.
     this.version(1).stores({
       settings: 'key',
       sessionLogs: '++id, date, weekNumber, sessionKey',
       setLogs: '++id, date, sessionKey, exerciseId',
       measurements: '++id, date, week',
       photos: '++id, date, week, angle',
+    });
+    // v2 — setLogs gain weightUsed / variationUsed / bodyWeight (non-indexed columns).
+    // No row rewrite is required for non-indexed additions; the upgrade hook exists
+    // so future schema changes (indexes, backfills, transforms) follow the same pattern
+    // instead of ever requiring a data wipe.
+    this.version(2).stores({
+      settings: 'key',
+      sessionLogs: '++id, date, weekNumber, sessionKey',
+      setLogs: '++id, date, sessionKey, exerciseId',
+      measurements: '++id, date, week',
+      photos: '++id, date, week, angle',
+    }).upgrade(async (tx) => {
+      // Backfill points for future versions. v1 → v2 has no transforms.
+      void tx;
     });
   }
 }
@@ -88,6 +110,7 @@ export async function getProgramStartDate(): Promise<string | null> {
 
 export async function setProgramStartDate(isoDate: string): Promise<void> {
   await db.settings.put({ key: PROGRAM_START_DATE_KEY, value: isoDate });
+  emitDataChanged();
 }
 
 const NOTIFICATIONS_ENABLED_KEY = 'notificationsEnabled';
@@ -138,6 +161,42 @@ export async function setSavePhotosToGallery(value: boolean): Promise<void> {
   await db.settings.put({ key: SAVE_PHOTOS_TO_GALLERY_KEY, value: String(value) });
 }
 
+const DEVELOPER_MODE_KEY = 'developerMode';
+
+/** Whether the hidden Developer Mode is enabled (default off). */
+export async function getDeveloperModeEnabled(): Promise<boolean> {
+  const row = await db.settings.get(DEVELOPER_MODE_KEY);
+  return row?.value === 'true';
+}
+
+export async function setDeveloperModeEnabled(enabled: boolean): Promise<void> {
+  await db.settings.put({ key: DEVELOPER_MODE_KEY, value: String(enabled) });
+}
+
+const VERBOSE_LOGGING_KEY = 'verboseLogging';
+
+/** Whether every recovery computation is logged to the console (default off). */
+export async function getVerboseLoggingEnabled(): Promise<boolean> {
+  const row = await db.settings.get(VERBOSE_LOGGING_KEY);
+  return row?.value === 'true';
+}
+
+export async function setVerboseLoggingEnabled(enabled: boolean): Promise<void> {
+  await db.settings.put({ key: VERBOSE_LOGGING_KEY, value: String(enabled) });
+}
+
+const RECOVERY_TRACING_KEY = 'recoveryTracing';
+
+/** Whether in-memory recovery traces are kept for before/after comparison (default on). */
+export async function getRecoveryTracingEnabled(): Promise<boolean> {
+  const row = await db.settings.get(RECOVERY_TRACING_KEY);
+  return row ? row.value === 'true' : true;
+}
+
+export async function setRecoveryTracingEnabled(enabled: boolean): Promise<void> {
+  await db.settings.put({ key: RECOVERY_TRACING_KEY, value: String(enabled) });
+}
+
 export async function getSessionLog(
   date: string,
   sessionKey: string
@@ -147,12 +206,15 @@ export async function getSessionLog(
 
 export async function upsertSessionLog(entry: SessionLog): Promise<number> {
   const existing = await getSessionLog(entry.date, entry.sessionKey);
+  let id: number;
   if (existing?.id) {
     await db.sessionLogs.update(existing.id, entry);
-    return existing.id;
+    id = existing.id;
+  } else {
+    id = (await db.sessionLogs.add(entry)) as number;
   }
-  const newId = await db.sessionLogs.add(entry);
-  return newId as number;
+  emitDataChanged();
+  return id;
 }
 
 export async function getSessionLogsForWeek(weekNumber: number): Promise<SessionLog[]> {
@@ -167,6 +229,13 @@ export async function getAllSetLogs(): Promise<SetLog[]> {
   return db.setLogs.orderBy('date').toArray();
 }
 
+/** Record a set log and notify coaching consumers. */
+export async function addSetLog(entry: SetLog): Promise<number> {
+  const id = (await db.setLogs.add(entry)) as number;
+  emitDataChanged();
+  return id;
+}
+
 // ---- Measurement helpers ----
 
 export async function getMeasurementForWeek(week: number): Promise<MeasurementEntry | undefined> {
@@ -175,12 +244,15 @@ export async function getMeasurementForWeek(week: number): Promise<MeasurementEn
 
 export async function upsertMeasurement(entry: MeasurementEntry): Promise<number> {
   const existing = await getMeasurementForWeek(entry.week);
+  let id: number;
   if (existing?.id) {
     await db.measurements.update(existing.id, entry);
-    return existing.id;
+    id = existing.id;
+  } else {
+    id = (await db.measurements.add(entry)) as number;
   }
-  const newId = await db.measurements.add(entry);
-  return newId as number;
+  emitDataChanged();
+  return id;
 }
 
 export async function getAllMeasurements(): Promise<MeasurementEntry[]> {
@@ -195,16 +267,20 @@ export async function getPhotosForWeek(week: number): Promise<PhotoEntry[]> {
 
 export async function upsertPhoto(entry: PhotoEntry): Promise<number> {
   const existing = await db.photos.where({ week: entry.week, angle: entry.angle }).first();
+  let id: number;
   if (existing?.id) {
     await db.photos.update(existing.id, entry);
-    return existing.id;
+    id = existing.id;
+  } else {
+    id = (await db.photos.add(entry)) as number;
   }
-  const newId = await db.photos.add(entry);
-  return newId as number;
+  emitDataChanged();
+  return id;
 }
 
 export async function deletePhoto(id: number): Promise<void> {
   await db.photos.delete(id);
+  emitDataChanged();
 }
 
 export async function getWeeksWithAnyPhoto(): Promise<number[]> {
@@ -217,6 +293,7 @@ export async function resetProgress(): Promise<void> {
   await db.setLogs.clear();
   await db.measurements.clear();
   await db.photos.clear();
+  emitDataChanged();
 }
 
 export async function resetAllData(): Promise<void> {
@@ -225,4 +302,5 @@ export async function resetAllData(): Promise<void> {
   await db.setLogs.clear();
   await db.measurements.clear();
   await db.photos.clear();
+  emitDataChanged();
 }

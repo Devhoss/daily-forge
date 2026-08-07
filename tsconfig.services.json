@@ -1,0 +1,12 @@
+{
+  // Type-checks the pure service layer and its Node test files in isolation.
+  // Test files are excluded from the app build (tsconfig.app.json) because they
+  // need Node typings; this config supplies them and otherwise inherits the app
+  // settings (paths, strictness, erasableSyntaxOnly).
+  "extends": "./tsconfig.app.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src/services", "src/lib/events.test.mts"]
+}
