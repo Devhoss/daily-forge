@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Calendar, Dumbbell, RotateCcw, Trash2, Info, Bell, AlertTriangle, Camera, Database, Download, Upload, Save, Share2, Terminal, Bug, Activity, Eraser, ShieldOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Dumbbell, RotateCcw, Trash2, Info, Bell, AlertTriangle, Camera, Database, Download, Upload, Save, Share2, Terminal, Bug, Bot, Activity, Eraser, ShieldOff } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { NotificationCard } from "@/components/NotificationCard";
 import { getProgramStartDate, setProgramStartDate, resetProgress, resetAllData } from "@/lib/db";
@@ -679,6 +679,19 @@ export function Settings() {
               </button>
 
               <div className="mt-1 space-y-1 border-t border-white/10 pt-2">
+                <button
+                  onClick={() => navigate("/coach")}
+                  className="flex w-full items-center gap-3 rounded-lg px-1 py-2 transition active:scale-[0.99]"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-violet-500/15">
+                    <Bot size={18} className="text-violet-400" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-white">AI Coach</p>
+                    <p className="text-xs text-slate-400">Ask your on-device Gemma coach</p>
+                  </div>
+                  <ChevronRight size={16} className="text-slate-500" />
+                </button>
                 <button
                   onClick={() => navigate("/debug#recovery")}
                   className="flex w-full items-center gap-3 rounded-lg px-1 py-2 transition active:scale-[0.99]"

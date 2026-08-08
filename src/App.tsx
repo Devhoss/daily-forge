@@ -9,6 +9,7 @@ import { Settings } from "@/pages/Settings";
 import { WorkoutReview } from "@/pages/WorkoutReview";
 import { History } from "@/pages/History";
 import { DebugPage } from "@/pages/Debug";
+import { CoachPage } from "@/pages/Coach";
 import { BottomNav } from "@/components/BottomNav";
 import { SettingsProvider, useSettings } from "@/lib/SettingsContext";
 import { ToastProvider } from "@/lib/toast";
@@ -56,7 +57,7 @@ function Shell() {
   }, [loaded, notificationsEnabled, reminderTime]);
 
   const isOnboarding = location.pathname === "/" && hasStartDate === false;
-  const hideNav = location.pathname.startsWith("/workout") || location.pathname.startsWith("/review") || location.pathname.startsWith("/debug") || isOnboarding;
+  const hideNav = location.pathname.startsWith("/workout") || location.pathname.startsWith("/review") || location.pathname.startsWith("/debug") || location.pathname.startsWith("/coach") || isOnboarding;
 
   return (
     <>
@@ -77,7 +78,8 @@ function Shell() {
         <Route path="/history" element={<History />} />
         <Route path="/book" element={<Book />} />
         <Route path="/settings" element={<Settings />} />
-        {/* Hidden developer route — only reachable by typing /#/debug. */}
+        {/* Hidden developer routes — only reachable by typing /#/coach or /#/debug. */}
+        <Route path="/coach" element={<CoachPage />} />
         <Route path="/debug" element={<DebugPage />} />
       </Routes>
       {!hideNav && <BottomNav />}
