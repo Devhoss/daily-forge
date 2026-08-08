@@ -11,7 +11,8 @@ await register(
   { parentURL: import.meta.url },
 );
 
-const { computeRecoveryScore, strainImpact } = await import('./recoveryScore.ts');
+const { computeRecoveryScore, strainImpact, clearRecoveryDebugTraces, getRecoveryDebugTraces } =
+  await import('./recoveryScore.ts');
 
 // week 1: 07-26..08-01, week 2: 08-02..08-08. Rest days: offsets 3, 10, 17 (Thu).
 const START = '2026-07-26';
@@ -277,4 +278,81 @@ test('deterministic: identical inputs yield identical analyses', () => {
   const a = score(s, sl, 14);
   const b = score(s, sl, 14);
   assert.deepEqual(a, b);
+});
+
+// ---------------------------------------------------------------------------
+// Regression: calendar-day rollover & post-workout recomputation.
+//
+// These lock in behaviors verified against the engine and the Home wiring
+// (Home.tsx recomputes recovery + recommendations together from the same fresh
+// logs and `asOf` on every mount and data-changed event). No scoring changed.
+// ---------------------------------------------------------------------------
+
+function sessFull(offset: number, rpe: number, durationMin: number, energy: number): SessionLog {
+  return {
+    date: dateOf(offset),
+    weekNumber: Math.floor(offset / 7) + 1,
+    sessionKey: 'push_a',
+    completed: true,
+    rpe,
+    durationMin,
+    energy,
+  };
+}
+
+test('calendar-day rollover recomputes factors even when the score is unchanged', () => {
+  // Sessions 0,1,2,4 plus a hard offset-5 session (RPE 9, 60 min, energy 3 → strain 56).
+  // asOf = 5 is the workout day; asOf = 6 is the next day with the same logs.
+  const s = [...sessions([0, 1, 2, 4], 7), sessFull(5, 9, 60, 3)];
+
+  const beforeMidnight = score(s, [], 5);
+  const afterMidnight = score(s, [], 6);
+
+  // time since last workout: trained today → trained yesterday
+  assert.equal(factorOf(beforeMidnight, 'time_since_last_workout')?.impact, -4);
+  assert.equal(factorOf(afterMidnight, 'time_since_last_workout')?.impact, -2);
+
+  // acute session strain: full weight today → 0.7 recency decay tomorrow
+  assert.equal(factorOf(beforeMidnight, 'acute_session_strain')?.impact, -6);
+  assert.equal(factorOf(afterMidnight, 'acute_session_strain')?.impact, -4);
+
+  // consecutive days: two logged days → zero (today isn't logged yet after midnight)
+  assert.equal(factorOf(beforeMidnight, 'consecutive_training_days')?.impact, -2);
+  assert.equal(factorOf(afterMidnight, 'consecutive_training_days')?.impact, 0);
+
+  // consistency: 100% → 83% (the new planned day is not yet completed)
+  assert.equal(factorOf(beforeMidnight, 'consistency')?.impact, 6);
+  assert.equal(factorOf(afterMidnight, 'consistency')?.impact, 0);
+
+  // The four shifts cancel out: the score lands on the same number, but the
+  // analysis is recomputed from the changed factors (the explanation tracks it).
+  assert.equal(beforeMidnight.score, afterMidnight.score);
+  assert.match(beforeMidnight.explanation, /consistency/);
+  assert.doesNotMatch(afterMidnight.explanation, /consistency/);
+});
+
+test('completing today’s workout recomputes recovery immediately with it included', () => {
+  const yesterday = sessions([11], 7);
+  const before = score(yesterday, [], 12);
+  assert.equal(factorOf(before, 'time_since_last_workout')?.impact, -2);
+
+  const today = [...yesterday, sessFull(12, 9, 40, 3)];
+  const after = score(today, [], 12);
+
+  // Today's completed session is now the basis for recency and acute strain.
+  assert.equal(factorOf(after, 'time_since_last_workout')?.impact, -4);
+  const acute = factorOf(after, 'acute_session_strain');
+  assert.ok(acute);
+  assert.equal(acute?.direction, 'straining');
+  assert.match(acute?.detail ?? '', /9 RPE/);
+  assert.ok(after.score < before.score);
+  assert.notEqual(after.explanation, before.explanation);
+
+  // The debug trace records whether today's session was part of the inputs.
+  clearRecoveryDebugTraces();
+  score(yesterday, [], 12);
+  assert.equal(getRecoveryDebugTraces().at(-1)?.inputs.todayCompletedIncluded, false);
+  clearRecoveryDebugTraces();
+  score(today, [], 12);
+  assert.equal(getRecoveryDebugTraces().at(-1)?.inputs.todayCompletedIncluded, true);
 });
