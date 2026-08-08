@@ -22,6 +22,8 @@ export interface AskCoachOptions {
 
 export interface AskCoachResult {
   ok: boolean;
+  /** True when the generation was user-cancelled (the response explains so). */
+  cancelled?: boolean;
   response: CoachResponse;
   raw: string;
   diagnostics: AiDiagnostics;
@@ -96,16 +98,27 @@ export async function askCoach(
     text = result.text;
   } catch (err) {
     const message = err instanceof Error ? err.message : 'generation failed';
+    const cancelled = /cancell/i.test(message);
     return {
       ok: false,
-      response: {
-        answer: "I couldn't produce a response for that question just now.",
-        keyPoints: [],
-        referencedFacts: [],
-        suggestedAction: null,
-        confidence: 'low',
-        limitations: [message],
-      },
+      cancelled,
+      response: cancelled
+        ? {
+            answer: 'Generation stopped.',
+            keyPoints: ['The response was cancelled before it finished.'],
+            referencedFacts: [],
+            suggestedAction: null,
+            confidence: 'low',
+            limitations: ['The previous generation was cancelled by the user.'],
+          }
+        : {
+            answer: "I couldn't produce a response for that question just now.",
+            keyPoints: [],
+            referencedFacts: [],
+            suggestedAction: null,
+            confidence: 'low',
+            limitations: [message],
+          },
       raw: '',
       diagnostics: provider.getDiagnostics(),
     };

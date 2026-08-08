@@ -142,6 +142,30 @@ export interface AiDiagnostics {
   lastRequestAt: string | null;
   lastResponsePreview: string | null;
   lastError: string | null;
+  /** Native-only (Android): LiteRT-LM artifact version actually linked. */
+  runtimeVersion: string | null;
+  /** Model file format, e.g. "litertlm". */
+  modelFormat: string | null;
+  /** Resolved on-device model path (native only). */
+  modelPath: string | null;
+  /** Whether the model file exists on disk (native only). */
+  modelExists: boolean | null;
+  /** On-disk size in bytes (native only). */
+  modelSizeBytes: number | null;
+  /** Approx. process PSS in kB measured before load (native only, best-effort). */
+  baselineMemoryKb: number | null;
+  /** Approx. process PSS in kB measured right after load (native only). */
+  loadMemoryKb: number | null;
+  /** ms from send to first generated token (native, measured in plugin). */
+  firstTokenMs: number | null;
+  /** prefill tokens processed per second (native benchmark, -1 = unknown). */
+  prefillTokensPerSecond: number | null;
+  /** decode tokens generated per second (native benchmark, -1 = unknown). */
+  decodeTokensPerSecond: number | null;
+  /** time to first token in seconds (native benchmark, -1 = unknown). */
+  timeToFirstTokenInSecond: number | null;
+  /** True when the last generation was cancelled by the user. */
+  lastCancelled: boolean | null;
 }
 
 export interface GenerationRequest {
@@ -176,5 +200,10 @@ export interface AiProvider {
   unload(): Promise<void>;
   /** Run a single generation. Provider must already be loaded and available. */
   generate(request: GenerationRequest): Promise<GenerationResult>;
+  /**
+   * Best-effort cancellation of an in-flight generation. Providers that do not
+   * support cancellation (or are not running) resolve with `false`. Never throws.
+   */
+  cancel(): Promise<boolean>;
   getDiagnostics(): AiDiagnostics;
 }

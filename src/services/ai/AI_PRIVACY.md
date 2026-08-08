@@ -111,6 +111,51 @@ Inference runs entirely offline.
    keyPoints / suggestedAction / limitations; the "raw model response" toggle
    in the message reveals the JSON the parser consumed.
 
+## RC2 verification results (physical device, Aug 2026)
+
+Run on SM-A536E / Android 16 (serial `RZCTB0HMQ5L`), app pid isolated in
+logcat. Model artifact: `gemma-4-E2B-it.litertlm` (2.58 GB, int4) stored at
+`files/models/` in app storage.
+
+1. **No network (airplane mode): PASS.** `settings get global airplane_mode_on`
+   returned `1` (radios off) for the entire test window. A full Q&A
+   (`isAvailable` → `load` → `generate`) succeeded: model loaded from the
+   local `.litertlm` file + local XNNPack cache (`loadTimeMs` ≈ 4.8 s), and a
+   structured reply was produced. Logcat filtered to the app pid showed **zero
+   network-related events** across the whole window.
+2. **Source audit:** the only network touchpoint in `src/` is a local-blob
+   `fetch(result.webPath)` in `photoGallery.ts` (off-AI, local scheme). The
+   AI module tree (`src/services/ai/`) contains no `fetch`, no HTTP client, no
+   API-key handling, and no telemetry. `AiCoachPlugin.kt` imports only
+   LiteRT-LM + Android framework classes — no socket/HTTP classes.
+3. **Permissions:** the manifest declares only `android.permission.INTERNET`
+   (Capacitor default). The AI path uses no network, so inference does not
+   require or perform any egress even though the permission exists.
+4. **Lifecycle / RAM release: PASS.** `load` → `generate` → leave screen
+   (`unload`) released the model: Native Heap 1,625,864 KB → 191,124 KB,
+   TOTAL PSS 1,720,157 KB → 230,224 KB. Re-entering the coach showed a clean
+   `Idle`/unloaded state and a second full generation succeeded.
+5. **Determinism spot-check: PASS.** Re-asking the same recovery question over
+   four separate runs returned the same underlying facts (recovery 43/100,
+   overtraining risk, rest/deload suggestion) — the model rephrases, the
+   numbers stay stable.
+6. **Structured reply: PASS.** Responses parse to answer / keyPoints /
+   suggestedAction / limitations with high confidence; raw JSON exposed via the
+   developer toggle.
+7. **Performance (honest range, on-device):** model load 2.5–14.5 s; time to
+   first token 75.2–96.0 s; prefill 20.2–25.2 tok/s; decode 2.1–3.4 tok/s;
+   total latency 158.4–236.0 s; 1,785 prompt tokens → 297 generated tokens;
+   RAM baseline ~177 MB → ~575 MB after load.
+8. **Known limitation (documented honestly):** under sustained thermal load
+   (battery 37–39 °C) the LiteRT-LM callback thread pool can stall after
+   compute completes — observed twice as `DEADLINE_EXCEEDED: Timeout waiting
+   for all tasks to be done in pool 'callback_thread_pool'` /
+   `Task N not found`, delaying result delivery by ~10 min beyond the model's
+   reported latency. The result always arrived intact and the UI recovered to
+   `Ready`; no data was lost and no network was involved. Treated as a
+   LiteRT-LM runtime observation for future optimization, not a privacy or
+   correctness defect.
+
 ## Guardrails for the future
 
 - If any new capability (e.g. Health Adapters for sleep/HRV) is added, it must

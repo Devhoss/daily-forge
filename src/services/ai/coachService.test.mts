@@ -76,6 +76,18 @@ function fakeProvider(opts: FakeProviderOpts = {}): AiProvider & { diagnostics: 
     lastRequestAt: null,
     lastResponsePreview: null,
     lastError: null,
+    runtimeVersion: null,
+    modelFormat: null,
+    modelPath: null,
+    modelExists: null,
+    modelSizeBytes: null,
+    baselineMemoryKb: null,
+    loadMemoryKb: null,
+    firstTokenMs: null,
+    prefillTokensPerSecond: null,
+    decodeTokensPerSecond: null,
+    timeToFirstTokenInSecond: null,
+    lastCancelled: null,
   };
   return {
     id: 'fake',
@@ -103,6 +115,9 @@ function fakeProvider(opts: FakeProviderOpts = {}): AiProvider & { diagnostics: 
     async unload() {
       diag.loaded = false;
       diag.status = 'idle';
+    },
+    async cancel() {
+      return false;
     },
     async generate(request: GenerationRequest): Promise<GenerationResult> {
       if (opts.generateError) {
@@ -176,6 +191,20 @@ test('generation failure returns an honest fallback and surfaces the error', asy
   assert.equal(result.ok, false);
   assert.match(result.response.limitations.join(' '), /tokens exhausted/);
   assert.equal(result.diagnostics.lastError, 'tokens exhausted');
+});
+
+test('a user-cancelled generation reports cancelled=true with an explicit reply', async () => {
+  const ctx = emptyContext();
+  const provider: AiProvider = {
+    ...fakeProvider(),
+    async generate() {
+      throw new Error('Generation cancelled');
+    },
+  };
+  const result = await askCoach(ctx, 'long question', { provider });
+  assert.equal(result.ok, false);
+  assert.equal(result.cancelled, true);
+  assert.match(result.response.answer, /stopped/i);
 });
 
 test('unparseable model output is surfaced but still structured', async () => {

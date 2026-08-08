@@ -14,6 +14,7 @@ import {
   Send,
   Shield,
   Sparkles,
+  Square,
   Terminal,
 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
@@ -281,10 +282,23 @@ export function CoachPage() {
                 placeholder="How is my recovery today?"
                 className="w-full rounded-xl border border-white/10 bg-slate-900/70 px-4 py-3 text-sm text-white outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 [color-scheme:dark]"
               />
-              <Button onClick={handleSend} disabled={asking || !question.trim()} className="w-auto shrink-0 px-4">
+              <Button
+                onClick={handleSend}
+                disabled={asking || !question.trim()}
+                className="w-auto shrink-0 px-4"
+              >
                 {asking ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
               </Button>
             </div>
+
+            {asking && (
+              <button
+                onClick={() => void provider.cancel()}
+                className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-rose-300 transition hover:border-rose-400/40 hover:text-rose-200"
+              >
+                <Square size={14} /> Stop generating
+              </button>
+            )}
 
             <div className="mt-3 flex flex-wrap gap-1.5">
               {SUGGESTED_QUESTIONS.map((q) => (
@@ -336,6 +350,8 @@ export function CoachPage() {
                   <div className="mt-2">
                     <KeyValue k="Model" v={diag.modelName} />
                     <KeyValue k="Version" v={diag.modelVersion} mono />
+                    <KeyValue k="Runtime" v={diag.runtimeVersion} mono />
+                    <KeyValue k="Format" v={diag.modelFormat} mono />
                     <KeyValue k="Quantization" v={diag.quantization} mono />
                     <KeyValue k="Backend" v={diag.backend} />
                     <KeyValue k="Provider" v={diag.providerId} mono />
@@ -343,7 +359,14 @@ export function CoachPage() {
                     <KeyValue k="Load time" v={diag.loadTimeMs != null ? formatMs(diag.loadTimeMs) : null} mono />
                     <KeyValue k="Prompt tokens" v={diag.promptTokens} mono />
                     <KeyValue k="Generated tokens" v={diag.generatedTokens} mono />
+                    <KeyValue k="First token" v={diag.firstTokenMs != null ? formatMs(diag.firstTokenMs) : null} mono />
+                    <KeyValue k="Prefill tok/s" v={diag.prefillTokensPerSecond != null && diag.prefillTokensPerSecond >= 0 ? diag.prefillTokensPerSecond.toFixed(1) : null} mono />
+                    <KeyValue k="Decode tok/s" v={diag.decodeTokensPerSecond != null && diag.decodeTokensPerSecond >= 0 ? diag.decodeTokensPerSecond.toFixed(1) : null} mono />
                     <KeyValue k="Latency" v={diag.latencyMs != null ? formatMs(diag.latencyMs) : null} mono />
+                    <KeyValue k="Model size" v={diag.modelSizeBytes != null && diag.modelSizeBytes > 0 ? `${(diag.modelSizeBytes / 1_000_000_000).toFixed(2)} GB` : null} mono />
+                    <KeyValue k="RAM baseline" v={diag.baselineMemoryKb != null ? `${(diag.baselineMemoryKb / 1024).toFixed(1)} MB` : null} mono />
+                    <KeyValue k="RAM after load" v={diag.loadMemoryKb != null ? `${(diag.loadMemoryKb / 1024).toFixed(1)} MB` : null} mono />
+                    <KeyValue k="Model path" v={diag.modelPath} mono />
                     <KeyValue k="Last request" v={formatFullTime(diag.lastRequestAt)} />
                     <KeyValue k="Last error" v={diag.lastError} />
                   </div>
